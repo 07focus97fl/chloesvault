@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, ChevronDown, Camera, X } from "lucide-react";
+import { Heart, ChevronDown, Camera, X, Plus, Grid3X3, Trash2 } from "lucide-react";
 import { MOCK_ACTIVITY } from "@/lib/mock-data";
 import { useCollagePhotos } from "@/lib/hooks/useCollagePhotos";
+import type { CollagePhoto } from "@/lib/types/database";
+
+const MAX_DISPLAY = 4;
+const ROTATE_INTERVAL = 30000;
 
 const ROTATIONS = [-7, 4, -3, 6, -5, 8, -2, 5];
 const POSITIONS = [
   { top: "8%", left: "5%" },
   { top: "2%", left: "52%" },
-  { top: "45%", left: "15%" },
-  { top: "40%", left: "55%" },
-  { top: "20%", left: "32%" },
-  { top: "55%", left: "38%" },
-  { top: "10%", left: "70%" },
-  { top: "50%", left: "2%" },
+  { top: "45%", left: "12%" },
+  { top: "38%", left: "55%" },
 ];
 
 function relativeTime(dateStr: string) {
@@ -36,13 +36,39 @@ export default function HomePage() {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [viewingPhoto, setViewingPhoto] = useState<CollagePhoto | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [rotationOffset, setRotationOffset] = useState(0);
+  const [fadeState, setFadeState] = useState<"in" | "out">("in");
   const touchStartX = useRef(0);
   const touchCurrentX = useRef(0);
   const activeEl = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { photos, addPhoto, removePhoto } = useCollagePhotos();
+
+  // Rotate displayed photos every 30s if more than MAX_DISPLAY
+  useEffect(() => {
+    if (photos.length <= MAX_DISPLAY) return;
+    const timer = setInterval(() => {
+      setFadeState("out");
+      setTimeout(() => {
+        setRotationOffset((prev) => (prev + MAX_DISPLAY) % photos.length);
+        setFadeState("in");
+      }, 400);
+    }, ROTATE_INTERVAL);
+    return () => clearInterval(timer);
+  }, [photos.length]);
+
+  const displayedPhotos = useMemo(() => {
+    if (photos.length <= MAX_DISPLAY) return photos;
+    const result: CollagePhoto[] = [];
+    for (let i = 0; i < MAX_DISPLAY; i++) {
+      result.push(photos[(rotationOffset + i) % photos.length]);
+    }
+    return result;
+  }, [photos, rotationOffset]);
 
   const visibleItems = MOCK_ACTIVITY.filter((item) => !dismissed.has(item.id));
   const displayItems = expanded ? visibleItems : visibleItems.slice(0, 3);
@@ -82,6 +108,7 @@ export default function HomePage() {
     if (!file) return;
     await addPhoto(file, "", "michael");
     e.target.value = "";
+    setShowMenu(false);
   }, [addPhoto]);
 
   return (
@@ -95,7 +122,7 @@ export default function HomePage() {
           </h1>
           <Heart size={16} className="text-heart animate-pulse-soft" />
         </div>
-        <p className="text-sm text-text-muted">Let&apos;s have fun with this ;)</p>
+        <p className="text-sm text-text-muted">Let&apos;s have some fun 😉</p>
       </div>
 
       {/* Recent Activity */}
@@ -138,23 +165,22 @@ export default function HomePage() {
         className="relative mb-6 animate-fade-in-up"
         style={{ animationDelay: "0.2s", height: "280px" } as React.CSSProperties}
       >
-        <h2 className="mb-2 text-sm font-semibold text-text-muted">Our Photos</h2>
-        <div className="relative h-full w-full">
-          {photos.map((photo, i) => {
+        <div className={`relative h-full w-full transition-opacity duration-400 ${fadeState === "out" ? "opacity-0" : "opacity-100"}`}>
+          {displayedPhotos.map((photo, i) => {
             const rotation = ROTATIONS[i % ROTATIONS.length];
             const pos = POSITIONS[i % POSITIONS.length];
             const delay = i * 0.7;
             return (
               <div
                 key={photo.id}
-                onClick={() => setSelectedPhoto(selectedPhoto === photo.id ? null : photo.id)}
+                onClick={() => setViewingPhoto(photo)}
                 className="polaroid-float absolute cursor-pointer transition-transform duration-200 hover:scale-110 hover:z-10"
                 style={{
                   top: pos.top,
                   left: pos.left,
                   transform: `rotate(${rotation}deg)`,
                   animationDelay: `${delay}s`,
-                  zIndex: selectedPhoto === photo.id ? 20 : i,
+                  zIndex: i + 1,
                 }}
               >
                 <div className="relative rounded-sm bg-white p-[6px] shadow-lg" style={{ width: "110px" }}>
@@ -168,39 +194,146 @@ export default function HomePage() {
                       {photo.caption}
                     </p>
                   )}
-                  {selectedPhoto === photo.id && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removePhoto(photo.id);
-                        setSelectedPhoto(null);
-                      }}
-                      className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-md"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
                 </div>
               </div>
             );
           })}
 
-          {/* Add photo button */}
+          {photos.length === 0 && (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-sm text-text-dim">Tap the camera to add your first photo</p>
+            </div>
+          )}
+        </div>
+
+        {/* Camera menu button */}
+        <div className="absolute bottom-2 right-2 z-30">
+          {showMenu && (
+            <div className="absolute bottom-12 right-0 mb-1 w-40 overflow-hidden rounded-xl border border-border bg-card shadow-xl animate-fade-in-up">
+              <button
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setShowMenu(false);
+                }}
+                className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-sm text-text transition-colors active:bg-border/50"
+              >
+                <Plus size={16} className="text-text-muted" />
+                Add photo
+              </button>
+              <div className="mx-3 h-px bg-border" />
+              <button
+                onClick={() => {
+                  setShowLibrary(true);
+                  setShowMenu(false);
+                }}
+                className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-text transition-colors active:bg-border/50"
+              >
+                <Grid3X3 size={16} className="text-text-muted" />
+                See library
+              </button>
+            </div>
+          )}
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-2 right-2 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-md transition-transform active:scale-95"
+            onClick={() => setShowMenu(!showMenu)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-md transition-transform active:scale-95"
           >
             <Camera size={18} className="text-text-muted" />
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
         </div>
+
+        <input
+          id="collage-file-input"
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="absolute w-0 h-0 overflow-hidden opacity-0"
+        />
       </div>
+
+      {/* Full-size photo viewer */}
+      {viewingPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6 animate-fade-in"
+          onClick={() => setViewingPhoto(null)}
+        >
+          <div
+            className="relative max-h-[80vh] max-w-[90vw] rounded-lg bg-white p-3 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setViewingPhoto(null)}
+              className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border shadow-md"
+            >
+              <X size={16} className="text-text-muted" />
+            </button>
+            <img
+              src={viewingPhoto.url}
+              alt={viewingPhoto.caption || "Photo"}
+              className="max-h-[70vh] max-w-full rounded object-contain"
+            />
+            {viewingPhoto.caption && (
+              <p className="mt-2 text-center text-sm text-gray-500">{viewingPhoto.caption}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Photo Library */}
+      {showLibrary && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-bg animate-fade-in"
+        >
+          <div className="flex items-center justify-between px-5 pt-14 pb-4">
+            <h2 className="font-heading text-xl font-bold">Photo Library</h2>
+            <button
+              onClick={() => setShowLibrary(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card"
+            >
+              <X size={16} className="text-text-muted" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 pb-8">
+            {photos.length === 0 ? (
+              <p className="py-12 text-center text-sm text-text-dim">No photos yet</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {photos.map((photo) => (
+                  <div key={photo.id} className="group relative aspect-square">
+                    <img
+                      src={photo.url}
+                      alt={photo.caption || "Photo"}
+                      className="h-full w-full rounded-lg object-cover"
+                    />
+                    <button
+                      onClick={() => removePhoto(photo.id)}
+                      className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 active:opacity-100"
+                      style={{ opacity: 1 }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    {photo.caption && (
+                      <div className="absolute inset-x-0 bottom-0 rounded-b-lg bg-gradient-to-t from-black/60 to-transparent px-2 pb-1.5 pt-4">
+                        <p className="text-[10px] text-white truncate">{photo.caption}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => {
+                fileInputRef.current?.click();
+                setShowLibrary(false);
+              }}
+              className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-sm font-medium text-text transition-colors active:bg-border/50"
+            >
+              <Plus size={16} />
+              Add photo
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Float animation style */}
       <style jsx>{`
@@ -210,6 +343,13 @@ export default function HomePage() {
         }
         .polaroid-float {
           animation: polaroid-float 4s ease-in-out infinite;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
         }
       `}</style>
     </div>

@@ -1,30 +1,48 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { MOCK_MESSAGES } from "@/lib/mock-data";
 import type { Message, UserRole } from "@/lib/types/database";
 
 const USE_MOCK = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === "your-supabase-url-here";
+const PAGE_SIZE = 25;
 
 export function useMessages() {
-  const [messages, setMessages] = useState<Message[]>(USE_MOCK ? MOCK_MESSAGES : []);
-  const [loading, setLoading] = useState(!USE_MOCK);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const initialLoadDone = useRef(false);
   const supabase = createClient();
 
+  // Initial fetch — most recent PAGE_SIZE messages
   useEffect(() => {
-    if (USE_MOCK) return;
+    if (initialLoadDone.current) return;
+    initialLoadDone.current = true;
 
-    const fetchMessages = async () => {
+    if (USE_MOCK) {
+      const slice = MOCK_MESSAGES.slice(-PAGE_SIZE);
+      setMessages(slice);
+      setHasMore(MOCK_MESSAGES.length > PAGE_SIZE);
+      setLoading(false);
+      return;
+    }
+
+    const fetchInitial = async () => {
       const { data } = await supabase
         .from("messages")
         .select("*")
-        .order("created_at", { ascending: true });
-      if (data) setMessages(data);
+        .order("created_at", { ascending: false })
+        .limit(PAGE_SIZE);
+      if (data) {
+        setMessages(data.reverse());
+        setHasMore(data.length === PAGE_SIZE);
+      }
       setLoading(false);
     };
 
-    fetchMessages();
+    fetchInitial();
 
     const channel = supabase
       .channel("messages")
@@ -35,6 +53,37 @@ export function useMessages() {
 
     return () => { supabase.removeChannel(channel); };
   }, [supabase]);
+
+  // Load older messages
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || messages.length === 0) return;
+    setLoadingMore(true);
+
+    const oldestTimestamp = messages[0].created_at;
+
+    if (USE_MOCK) {
+      // Find all messages older than current oldest
+      const olderMessages = MOCK_MESSAGES.filter(m => m.created_at < oldestTimestamp);
+      const slice = olderMessages.slice(-PAGE_SIZE);
+      setMessages((prev) => [...slice, ...prev]);
+      setHasMore(olderMessages.length > PAGE_SIZE);
+      setLoadingMore(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .lt("created_at", oldestTimestamp)
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE);
+
+    if (data) {
+      setMessages((prev) => [...data.reverse(), ...prev]);
+      setHasMore(data.length === PAGE_SIZE);
+    }
+    setLoadingMore(false);
+  }, [loadingMore, hasMore, messages, supabase]);
 
   const sendMessage = useCallback(async (fromUser: UserRole, text: string) => {
     if (USE_MOCK) {
@@ -88,5 +137,5 @@ export function useMessages() {
     });
   }, [supabase]);
 
-  return { messages, loading, sendMessage, sendVoiceNote };
+  return { messages, setMessages, loading, loadingMore, hasMore, loadMore, sendMessage, sendVoiceNote };
 }

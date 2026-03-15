@@ -175,6 +175,23 @@ CREATE POLICY "Anyone can read voice notes"
   ON storage.objects FOR SELECT TO anon, authenticated
   USING (bucket_id = 'voice-notes');
 
+-- Message Notes (private notes on voice messages)
+CREATE TABLE chloesvault.message_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id UUID NOT NULL REFERENCES chloesvault.messages(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  added_by TEXT NOT NULL CHECK (added_by IN ('michael', 'chloe')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.message_notes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to message_notes"
+  ON chloesvault.message_notes FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+CREATE INDEX idx_message_notes_message ON chloesvault.message_notes(message_id);
+CREATE INDEX idx_message_notes_added_by ON chloesvault.message_notes(added_by);
+
 -- Collage photos table
 CREATE TABLE chloesvault.collage_photos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

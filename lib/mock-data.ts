@@ -1,4 +1,4 @@
-import type { Message, Quote, Moment, Recommendation, Topic, Activity, MessageFolder, MessageFolderItem, CollagePhoto } from "@/lib/types/database";
+import type { Message, Quote, Moment, Recommendation, Topic, Activity, MessageFolder, MessageFolderItem, CollagePhoto, MessageNote, Nightmare } from "@/lib/types/database";
 
 export const MOCK_MESSAGES: Message[] = [
   // March 13
@@ -287,6 +287,7 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     from_user: "michael",
     emoji: "🎬",
     done: true,
+    link: null,
     created_at: "2026-01-10T00:00:00Z",
   },
   {
@@ -296,6 +297,7 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     from_user: "chloe",
     emoji: "📺",
     done: false,
+    link: "https://www.netflix.com",
     created_at: "2026-02-05T00:00:00Z",
   },
   {
@@ -305,6 +307,7 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     from_user: "chloe",
     emoji: "📚",
     done: false,
+    link: null,
     created_at: "2026-02-14T00:00:00Z",
   },
   {
@@ -314,6 +317,7 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     from_user: "michael",
     emoji: "🎵",
     done: true,
+    link: "https://open.spotify.com",
     created_at: "2026-01-20T00:00:00Z",
   },
   {
@@ -323,6 +327,7 @@ export const MOCK_RECOMMENDATIONS: Recommendation[] = [
     from_user: "chloe",
     emoji: "🎙️",
     done: false,
+    link: null,
     created_at: "2026-03-01T00:00:00Z",
   },
 ];
@@ -355,6 +360,54 @@ export const MOCK_TOPICS: Topic[] = [
     used: true,
     added_by: "chloe",
     created_at: "2026-02-20T00:00:00Z",
+  },
+];
+
+export const MOCK_MESSAGE_NOTES: MessageNote[] = [
+  {
+    id: "mn1",
+    message_id: "m5",
+    text: "She said she loves the way I laugh",
+    added_by: "michael",
+    created_at: "2026-03-14T23:40:00Z",
+  },
+  {
+    id: "mn2",
+    message_id: "m5",
+    text: "Mentioned wanting to visit in April",
+    added_by: "michael",
+    created_at: "2026-03-14T23:41:00Z",
+  },
+];
+
+export const MOCK_NIGHTMARES: Nightmare[] = [
+  {
+    id: "n1",
+    text: "Michael ate steak (he's vegetarian)",
+    about: "michael",
+    added_by: "chloe",
+    created_at: "2026-03-10T00:00:00Z",
+  },
+  {
+    id: "n2",
+    text: "Chloe forgot our anniversary",
+    about: "chloe",
+    added_by: "michael",
+    created_at: "2026-03-08T00:00:00Z",
+  },
+  {
+    id: "n3",
+    text: "Michael moved to Mars without telling anyone",
+    about: "michael",
+    added_by: "michael",
+    created_at: "2026-03-05T00:00:00Z",
+  },
+  {
+    id: "n4",
+    text: "Chloe became a morning person",
+    about: "chloe",
+    added_by: "chloe",
+    created_at: "2026-03-03T00:00:00Z",
   },
 ];
 

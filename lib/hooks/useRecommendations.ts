@@ -43,5 +43,14 @@ export function useRecommendations() {
     setRecommendations((prev) => prev.map((r) => r.id === id ? { ...r, done: !r.done } : r));
   }, [supabase, recommendations]);
 
-  return { recommendations, loading, addRec, toggleDone };
+  const deleteRec = useCallback(async (id: string) => {
+    if (USE_MOCK) {
+      setRecommendations((prev) => prev.filter((r) => r.id !== id));
+      return;
+    }
+    await supabase.from("recommendations").delete().eq("id", id);
+    setRecommendations((prev) => prev.filter((r) => r.id !== id));
+  }, [supabase]);
+
+  return { recommendations, loading, addRec, toggleDone, deleteRec };
 }

@@ -119,6 +119,7 @@ export interface Database {
           from_user: UserRole;
           emoji: string;
           done: boolean;
+          link: string | null;
           created_at: string;
         };
         Insert: {
@@ -128,6 +129,7 @@ export interface Database {
           from_user: UserRole;
           emoji: string;
           done?: boolean;
+          link?: string | null;
           created_at?: string;
         };
         Update: {
@@ -137,6 +139,7 @@ export interface Database {
           from_user?: UserRole;
           emoji?: string;
           done?: boolean;
+          link?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -189,6 +192,54 @@ export interface Database {
         };
         Relationships: [];
       };
+      message_notes: {
+        Row: {
+          id: string;
+          message_id: string;
+          text: string;
+          added_by: UserRole;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          text: string;
+          added_by: UserRole;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          message_id?: string;
+          text?: string;
+          added_by?: UserRole;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      nightmares: {
+        Row: {
+          id: string;
+          text: string;
+          about: UserRole;
+          added_by: UserRole;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          text: string;
+          about: UserRole;
+          added_by: UserRole;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          text?: string;
+          about?: UserRole;
+          added_by?: UserRole;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       activity: {
         Row: {
           id: string;
@@ -231,6 +282,8 @@ export type Quote = Database["chloesvault"]["Tables"]["quotes"]["Row"];
 export type Moment = Database["chloesvault"]["Tables"]["moments"]["Row"];
 export type Recommendation = Database["chloesvault"]["Tables"]["recommendations"]["Row"];
 export type Topic = Database["chloesvault"]["Tables"]["topics"]["Row"];
+export type MessageNote = Database["chloesvault"]["Tables"]["message_notes"]["Row"];
+export type Nightmare = Database["chloesvault"]["Tables"]["nightmares"]["Row"];
 export type Activity = Database["chloesvault"]["Tables"]["activity"]["Row"];
 export type CollagePhoto = Database["chloesvault"]["Tables"]["collage_photos"]["Row"];
 

@@ -56,7 +56,7 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
   return (
-    <div className="fixed bottom-[68px] left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-border bg-surface px-4 py-4">
+    <div className="shrink-0 border-t border-border bg-surface px-4 py-4">
       <div className="flex items-center justify-between">
         <button onClick={onCancel} className="text-sm text-text-muted hover:text-text">
           Cancel

@@ -5,11 +5,12 @@ import BackHeader from "@/components/ui/BackHeader";
 import Card from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { MOCK_MOMENTS } from "@/lib/mock-data";
-import type { Moment } from "@/lib/types/database";
+import { useMoments } from "@/lib/hooks/useMoments";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function MomentsPage() {
-  const [moments, setMoments] = useState<Moment[]>(MOCK_MOMENTS);
+  const { moments, loading, addMoment } = useMoments();
+  const { role } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDate, setNewDate] = useState("");
@@ -18,16 +19,13 @@ export default function MomentsPage() {
 
   const handleAdd = () => {
     if (!newTitle.trim() || !newDate) return;
-    const moment: Moment = {
-      id: crypto.randomUUID(),
+    addMoment({
       title: newTitle.trim(),
       date: newDate,
       emoji: newEmoji || "✨",
       description: newDesc.trim(),
-      added_by: "michael",
-      created_at: new Date().toISOString(),
-    };
-    setMoments((prev) => [moment, ...prev]);
+      added_by: role || "michael",
+    });
     setNewTitle("");
     setNewDate("");
     setNewEmoji("✨");

@@ -10,28 +10,49 @@ import SearchBar from "@/components/chat/SearchBar";
 import MessageActions from "@/components/chat/MessageActions";
 import PinnedMessagesPanel from "@/components/chat/PinnedMessagesPanel";
 import FolderPicker from "@/components/chat/FolderPicker";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { MOCK_MESSAGES } from "@/lib/mock-data";
+import { useMessages } from "@/lib/hooks/useMessages";
+import { useMessageNotes } from "@/lib/hooks/useMessageNotes";
 import { groupMessagesByDate } from "@/lib/utils/date";
 import { useMessageSearch } from "@/lib/hooks/useMessageSearch";
 import { usePinnedMessages } from "@/lib/hooks/usePinnedMessages";
 import { useMessageFolders } from "@/lib/hooks/useMessageFolders";
+import { Loader2 } from "lucide-react";
 import type { Message } from "@/lib/types/database";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
+  const { role } = useAuth();
+  const currentUserRole = role ?? "michael";
+
+  const {
+    messages,
+    setMessages,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+  } = useMessages();
+
+  const {
+    addNote,
+    deleteNote,
+    getNotesForMessage,
+    promoteToTopic,
+  } = useMessageNotes(currentUserRole);
+
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [pinnedPanelOpen, setPinnedPanelOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState<Message | null>(null);
   const [folderPickerMessage, setFolderPickerMessage] = useState<Message | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const { role } = useAuth();
+  const isInitialScroll = useRef(true);
 
-  const currentUserRole = role ?? "michael";
   const otherName = currentUserRole === "michael" ? "Chloe" : "Michael";
 
   const search = useMessageSearch(messages);
@@ -46,9 +67,16 @@ export default function ChatPage() {
 
   const messageGroups = groupMessagesByDate(messages);
 
+  // Scroll to bottom on initial load and new messages
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (loading) return;
+    if (isInitialScroll.current) {
+      bottomRef.current?.scrollIntoView();
+      isInitialScroll.current = false;
+    } else {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading]);
 
   // Scroll to search result
   useEffect(() => {
@@ -57,6 +85,33 @@ export default function ChatPage() {
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [search.currentMessageId]);
+
+  // Intersection observer for "load more" sentinel
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    const container = scrollContainerRef.current;
+    if (!sentinel || !container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          // Save scroll height before prepending
+          const prevScrollHeight = container.scrollHeight;
+          loadMore().then(() => {
+            // Restore scroll position after prepend
+            requestAnimationFrame(() => {
+              const newScrollHeight = container.scrollHeight;
+              container.scrollTop += newScrollHeight - prevScrollHeight;
+            });
+          });
+        }
+      },
+      { root: container, threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loading, loadMore]);
 
   const scrollToMessage = useCallback((messageId: string) => {
     const el = messageRefs.current.get(messageId);
@@ -116,8 +171,21 @@ export default function ChatPage() {
     }
   };
 
+  const handlePromoteToTopic = async (noteText: string) => {
+    const success = await promoteToTopic(noteText);
+    if (success) {
+      setToast("Added to Topics");
+      setTimeout(() => setToast(null), 2000);
+    }
+  };
+
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 2000);
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="fixed inset-x-0 top-0 bottom-[68px] z-30 mx-auto flex max-w-[430px] flex-col bg-bg">
       <ChatHeader
         otherName={otherName}
         currentUserRole={currentUserRole}
@@ -141,34 +209,54 @@ export default function ChatPage() {
         />
       )}
 
-      <ScrollArea className="flex-1">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-2 px-4 py-4">
-          {messageGroups.map((group) => (
-            <div key={group.label}>
-              <DateSeparator label={group.label} />
-              <div className="flex flex-col gap-2">
-                {group.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    ref={(el) => {
-                      if (el) messageRefs.current.set(msg.id, el);
-                    }}
-                  >
-                    <MessageBubble
-                      message={msg}
-                      isMine={msg.from_user === currentUserRole}
-                      highlightQuery={searchOpen ? search.query : undefined}
-                      isSearchTarget={search.currentMessageId === msg.id}
-                      onLongPress={() => setActionMessage(msg)}
-                    />
-                  </div>
-                ))}
-              </div>
+          {/* Sentinel for loading more */}
+          <div ref={sentinelRef} className="h-1" />
+
+          {loadingMore && (
+            <div className="flex justify-center py-2">
+              <Loader2 size={20} className="animate-spin text-text-dim" />
             </div>
-          ))}
+          )}
+
+          {loading ? (
+            <div className="flex flex-1 items-center justify-center py-20">
+              <Loader2 size={24} className="animate-spin text-text-dim" />
+            </div>
+          ) : (
+            messageGroups.map((group) => (
+              <div key={group.label}>
+                <DateSeparator label={group.label} />
+                <div className="flex flex-col gap-2">
+                  {group.messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      ref={(el) => {
+                        if (el) messageRefs.current.set(msg.id, el);
+                      }}
+                      className={`flex ${msg.from_user === currentUserRole ? "justify-end" : "justify-start"}`}
+                    >
+                      <MessageBubble
+                        message={msg}
+                        isMine={msg.from_user === currentUserRole}
+                        highlightQuery={searchOpen ? search.query : undefined}
+                        isSearchTarget={search.currentMessageId === msg.id}
+                        onLongPress={() => setActionMessage(msg)}
+                        notes={msg.type === "voice" ? getNotesForMessage(msg.id) : undefined}
+                        onAddNote={msg.type === "voice" ? addNote : undefined}
+                        onDeleteNote={msg.type === "voice" ? deleteNote : undefined}
+                        onPromoteToTopic={msg.type === "voice" ? handlePromoteToTopic : undefined}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
           <div ref={bottomRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       {showVoiceRecorder ? (
         <VoiceRecorder
@@ -211,6 +299,15 @@ export default function ChatPage() {
         onCreateFolder={(name, emoji) => createFolder(name, emoji, currentUserRole)}
         userRole={currentUserRole}
       />
+
+      {/* Toast */}
+      {toast && (
+        <div className="absolute inset-x-0 bottom-20 flex justify-center pointer-events-none z-50">
+          <div className="rounded-full bg-surface border border-border px-4 py-2 text-xs font-medium text-text shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {toast}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

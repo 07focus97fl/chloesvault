@@ -18,10 +18,7 @@ export default function ChatInput({ onSend, onVoiceStart }: ChatInputProps) {
   };
 
   return (
-    <div
-      className="fixed bottom-[68px] left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-border bg-surface/80 px-4 py-3 backdrop-blur-xl"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
+    <div className="shrink-0 border-t border-border bg-surface/80 px-4 py-3 backdrop-blur-xl">
       <div className="flex items-center gap-2">
         <button
           onClick={onVoiceStart}

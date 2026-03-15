@@ -24,7 +24,7 @@ export default function ChatHeader({
       : "bg-michael/20 text-michael";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-cv-border bg-bg/80 px-4 py-3 backdrop-blur-xl">
+    <header className="shrink-0 border-b border-cv-border bg-bg/80 px-4 py-3 backdrop-blur-xl">
       <div className="flex items-center gap-3">
         <div className="relative">
           <div
