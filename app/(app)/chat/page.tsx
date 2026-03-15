@@ -31,6 +31,8 @@ export default function ChatPage() {
     loadingMore,
     hasMore,
     loadMore,
+    sendMessage,
+    sendVoiceNote,
   } = useMessages();
 
   const {
@@ -123,37 +125,11 @@ export default function ChatPage() {
   }, []);
 
   const handleSend = (text: string) => {
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      from_user: currentUserRole,
-      type: "text",
-      text,
-      voice_url: null,
-      duration: null,
-      status: "sent",
-      is_pinned: false,
-      pinned_at: null,
-      pinned_by: null,
-      created_at: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, newMessage]);
+    sendMessage(currentUserRole, text);
   };
 
   const handleVoiceSend = (blob: Blob, duration: number) => {
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      from_user: currentUserRole,
-      type: "voice",
-      text: null,
-      voice_url: URL.createObjectURL(blob),
-      duration,
-      status: "sent",
-      is_pinned: false,
-      pinned_at: null,
-      pinned_by: null,
-      created_at: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, newMessage]);
+    sendVoiceNote(currentUserRole, blob, duration);
     setShowVoiceRecorder(false);
   };
 
@@ -177,11 +153,6 @@ export default function ChatPage() {
       setToast("Added to Topics");
       setTimeout(() => setToast(null), 2000);
     }
-  };
-
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 2000);
   };
 
   return (

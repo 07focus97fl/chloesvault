@@ -47,7 +47,14 @@ export function useMessages() {
     const channel = supabase
       .channel("messages")
       .on("postgres_changes", { event: "INSERT", schema: "chloesvault", table: "messages" }, (payload) => {
-        setMessages((prev) => [...prev, payload.new as Message]);
+        const newMsg = payload.new as Message;
+        setMessages((prev) => {
+          // Skip if we already have this message (optimistic insert)
+          if (prev.some((m) => m.text === newMsg.text && m.from_user === newMsg.from_user && Math.abs(new Date(m.created_at).getTime() - new Date(newMsg.created_at).getTime()) < 5000)) {
+            return prev;
+          }
+          return [...prev, newMsg];
+        });
       })
       .subscribe();
 
@@ -86,55 +93,54 @@ export function useMessages() {
   }, [loadingMore, hasMore, messages, supabase]);
 
   const sendMessage = useCallback(async (fromUser: UserRole, text: string) => {
-    if (USE_MOCK) {
-      const msg: Message = {
-        id: crypto.randomUUID(),
-        from_user: fromUser,
-        type: "text",
-        text,
-        voice_url: null,
-        duration: null,
-        status: "sent",
-        is_pinned: false,
-        pinned_at: null,
-        pinned_by: null,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, msg]);
-      return;
+    const optimistic: Message = {
+      id: crypto.randomUUID(),
+      from_user: fromUser,
+      type: "text",
+      text,
+      voice_url: null,
+      duration: null,
+      status: "sent",
+      is_pinned: false,
+      pinned_at: null,
+      pinned_by: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
+    if (!USE_MOCK) {
+      await supabase.from("messages").insert({ from_user: fromUser, type: "text", text });
     }
-    await supabase.from("messages").insert({ from_user: fromUser, type: "text", text });
   }, [supabase]);
 
   const sendVoiceNote = useCallback(async (fromUser: UserRole, blob: Blob, duration: number) => {
-    if (USE_MOCK) {
-      const msg: Message = {
-        id: crypto.randomUUID(),
-        from_user: fromUser,
-        type: "voice",
-        text: null,
-        voice_url: URL.createObjectURL(blob),
-        duration,
-        status: "sent",
-        is_pinned: false,
-        pinned_at: null,
-        pinned_by: null,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, msg]);
-      return;
-    }
-
-    const fileName = `${fromUser}/${Date.now()}.webm`;
-    await supabase.storage.from("voice-notes").upload(fileName, blob);
-    const { data: { publicUrl } } = supabase.storage.from("voice-notes").getPublicUrl(fileName);
-
-    await supabase.from("messages").insert({
+    const optimistic: Message = {
+      id: crypto.randomUUID(),
       from_user: fromUser,
       type: "voice",
-      voice_url: publicUrl,
+      text: null,
+      voice_url: URL.createObjectURL(blob),
       duration,
-    });
+      status: "sent",
+      is_pinned: false,
+      pinned_at: null,
+      pinned_by: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
+    if (!USE_MOCK) {
+      const fileName = `${fromUser}/${Date.now()}.webm`;
+      await supabase.storage.from("voice-notes").upload(fileName, blob);
+      const { data: { publicUrl } } = supabase.storage.from("voice-notes").getPublicUrl(fileName);
+
+      await supabase.from("messages").insert({
+        from_user: fromUser,
+        type: "voice",
+        voice_url: publicUrl,
+        duration,
+      });
+    }
   }, [supabase]);
 
   return { messages, setMessages, loading, loadingMore, hasMore, loadMore, sendMessage, sendVoiceNote };

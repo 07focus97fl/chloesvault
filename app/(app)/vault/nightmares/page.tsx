@@ -1,30 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import BackHeader from "@/components/ui/BackHeader";
 import Card from "@/components/ui/Card";
-import { Plus } from "lucide-react";
+import { useNightmares } from "@/lib/hooks/useNightmares";
 
 export default function NightmaresPage() {
-  const [showForm, setShowForm] = useState(false);
+  const { nightmares, loading } = useNightmares();
+
+  const michaelCount = nightmares.filter((n) => n.about === "michael").length;
+  const chloeCount = nightmares.filter((n) => n.about === "chloe").length;
+
+  const sections = [
+    { name: "Michael", person: "michael", emoji: "😱", count: michaelCount },
+    { name: "Chloe", person: "chloe", emoji: "😱", count: chloeCount },
+  ];
 
   return (
     <div>
-      <BackHeader
-        title="Nightmares"
-        rightAction={
-          <button onClick={() => setShowForm(!showForm)} className="text-accent">
-            <Plus size={20} />
-          </button>
-        }
-      />
+      <BackHeader title="Nightmares" />
 
-      <div className="px-5 py-4">
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <span className="mb-3 text-4xl">😱</span>
-          <p className="text-sm text-text-muted">Nothing here yet</p>
-          <p className="mt-1 text-xs text-text-dim">Add your first nightmare</p>
-        </div>
+      <div className="px-5 py-4 space-y-3">
+        {sections.map((section, i) => (
+          <Link key={section.person} href={`/vault/nightmares/${section.person}`}>
+            <Card
+              className="flex items-center gap-4 animate-fade-in-up mb-3"
+              style={{ animationDelay: `${i * 0.1}s` } as React.CSSProperties}
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface text-2xl">
+                {section.emoji}
+              </span>
+              <div className="flex-1">
+                <h3 className="font-medium">{section.name}&apos;s Nightmares</h3>
+                <p className="text-sm text-text-muted">
+                  {loading ? "..." : `${section.count} nightmare${section.count !== 1 ? "s" : ""}`}
+                </p>
+              </div>
+              <span className="text-text-dim">&rsaquo;</span>
+            </Card>
+          </Link>
+        ))}
       </div>
     </div>
   );

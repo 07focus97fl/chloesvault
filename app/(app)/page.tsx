@@ -11,12 +11,24 @@ const MAX_DISPLAY = 4;
 const ROTATE_INTERVAL = 30000;
 
 const ROTATIONS = [-7, 4, -3, 6, -5, 8, -2, 5];
-const POSITIONS = [
-  { top: "8%", left: "5%" },
-  { top: "2%", left: "52%" },
-  { top: "45%", left: "12%" },
-  { top: "38%", left: "55%" },
-];
+const PHOTO_W = 120;
+const PHOTO_H = 100;
+const SPEED_MIN = 0.3;
+const SPEED_MAX = 0.7;
+const BOUNCE_DAMPING = 0.8;
+
+interface PhysicsBody {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  rotation: number;
+}
+
+function randomSpeed() {
+  const speed = SPEED_MIN + Math.random() * (SPEED_MAX - SPEED_MIN);
+  return Math.random() < 0.5 ? speed : -speed;
+}
 
 function relativeTime(dateStr: string) {
   const now = new Date();
@@ -48,6 +60,11 @@ export default function HomePage() {
 
   const { photos, addPhoto, removePhoto } = useCollagePhotos();
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const photoElsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const physicsRef = useRef<PhysicsBody[]>([]);
+  const rafRef = useRef<number>(0);
+
   // Rotate displayed photos every 30s if more than MAX_DISPLAY
   useEffect(() => {
     if (photos.length <= MAX_DISPLAY) return;
@@ -69,6 +86,121 @@ export default function HomePage() {
     }
     return result;
   }, [photos, rotationOffset]);
+
+  // Physics simulation
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || displayedPhotos.length === 0) return;
+
+    const cW = container.offsetWidth;
+    const cH = container.offsetHeight;
+
+    // Initialize physics bodies for each displayed photo
+    const bodies: PhysicsBody[] = displayedPhotos.map((_, i) => {
+      const existing = physicsRef.current[i];
+      if (existing && existing.x < cW - PHOTO_W && existing.y < cH - PHOTO_H) {
+        return existing;
+      }
+      return {
+        x: Math.random() * Math.max(0, cW - PHOTO_W),
+        y: Math.random() * Math.max(0, cH - PHOTO_H),
+        vx: randomSpeed(),
+        vy: randomSpeed(),
+        rotation: ROTATIONS[i % ROTATIONS.length],
+      };
+    });
+    physicsRef.current = bodies;
+
+    function tick() {
+      const els = photoElsRef.current;
+      const b = physicsRef.current;
+      const contW = container!.offsetWidth;
+      const contH = container!.offsetHeight;
+
+      for (let i = 0; i < b.length; i++) {
+        const body = b[i];
+        body.x += body.vx;
+        body.y += body.vy;
+
+        // Wall bounce
+        if (body.x < 0) {
+          body.x = 0;
+          body.vx = Math.abs(body.vx) * BOUNCE_DAMPING;
+        } else if (body.x + PHOTO_W > contW) {
+          body.x = contW - PHOTO_W;
+          body.vx = -Math.abs(body.vx) * BOUNCE_DAMPING;
+        }
+        if (body.y < 0) {
+          body.y = 0;
+          body.vy = Math.abs(body.vy) * BOUNCE_DAMPING;
+        } else if (body.y + PHOTO_H > contH) {
+          body.y = contH - PHOTO_H;
+          body.vy = -Math.abs(body.vy) * BOUNCE_DAMPING;
+        }
+
+        // Re-boost if speed gets too low
+        const speed = Math.sqrt(body.vx * body.vx + body.vy * body.vy);
+        if (speed < SPEED_MIN) {
+          body.vx = randomSpeed();
+          body.vy = randomSpeed();
+        }
+      }
+
+      // Photo-photo collision (circle-based for smooth response)
+      const collisionRadius = (PHOTO_W + PHOTO_H) / 4; // average half-dimension
+      for (let i = 0; i < b.length; i++) {
+        for (let j = i + 1; j < b.length; j++) {
+          const a = b[i];
+          const o = b[j];
+          const dx = (o.x + PHOTO_W / 2) - (a.x + PHOTO_W / 2);
+          const dy = (o.y + PHOTO_H / 2) - (a.y + PHOTO_H / 2);
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const minDist = collisionRadius * 2;
+
+          if (dist < minDist && dist > 0) {
+            // Normal vector from a to o
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // Relative velocity of a toward o
+            const dvx = a.vx - o.vx;
+            const dvy = a.vy - o.vy;
+            const relVelAlongNormal = dvx * nx + dvy * ny;
+
+            // Only resolve if moving toward each other (prevents jitter)
+            if (relVelAlongNormal > 0) {
+              a.vx -= relVelAlongNormal * nx;
+              a.vy -= relVelAlongNormal * ny;
+              o.vx += relVelAlongNormal * nx;
+              o.vy += relVelAlongNormal * ny;
+            }
+
+            // Separate so they no longer overlap
+            const overlap = minDist - dist;
+            const sepX = (overlap / 2 + 0.5) * nx;
+            const sepY = (overlap / 2 + 0.5) * ny;
+            a.x -= sepX;
+            a.y -= sepY;
+            o.x += sepX;
+            o.y += sepY;
+          }
+        }
+      }
+
+      // Apply transforms
+      for (let i = 0; i < b.length; i++) {
+        const el = els[i];
+        if (el) {
+          el.style.transform = `translate(${b[i].x}px, ${b[i].y}px) rotate(${b[i].rotation}deg)`;
+        }
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [displayedPhotos]);
 
   const visibleItems = MOCK_ACTIVITY.filter((item) => !dismissed.has(item.id));
   const displayItems = expanded ? visibleItems : visibleItems.slice(0, 3);
@@ -162,37 +294,32 @@ export default function HomePage() {
 
       {/* Floating Polaroid Collage */}
       <div
-        className="relative mb-6 animate-fade-in-up"
+        ref={containerRef}
+        className="relative mb-6 animate-fade-in-up overflow-hidden"
         style={{ animationDelay: "0.2s", height: "280px" } as React.CSSProperties}
       >
         <div className={`relative h-full w-full transition-opacity duration-400 ${fadeState === "out" ? "opacity-0" : "opacity-100"}`}>
           {displayedPhotos.map((photo, i) => {
-            const rotation = ROTATIONS[i % ROTATIONS.length];
-            const pos = POSITIONS[i % POSITIONS.length];
-            const delay = i * 0.7;
             return (
               <div
                 key={photo.id}
+                ref={(el) => { photoElsRef.current[i] = el; }}
                 onClick={() => setViewingPhoto(photo)}
-                className="polaroid-float absolute cursor-pointer transition-transform duration-200 hover:scale-110 hover:z-10"
-                style={{
-                  top: pos.top,
-                  left: pos.left,
-                  transform: `rotate(${rotation}deg)`,
-                  animationDelay: `${delay}s`,
-                  zIndex: i + 1,
-                }}
+                className="absolute cursor-pointer hover:scale-110 hover:z-10"
+                style={{ zIndex: i + 1, willChange: "transform" }}
               >
-                <div className="relative rounded-sm bg-white p-[6px] shadow-lg" style={{ width: "110px" }}>
+                <div className="relative rounded-xl overflow-hidden shadow-lg" style={{ width: "120px" }}>
                   <img
                     src={photo.url}
                     alt={photo.caption || "Collage photo"}
-                    className="h-[90px] w-full rounded-[2px] object-cover"
+                    className="h-[100px] w-full object-cover"
                   />
                   {photo.caption && (
-                    <p className="mt-1 text-center text-[9px] text-gray-500 leading-tight truncate">
-                      {photo.caption}
-                    </p>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 pb-1.5 pt-4">
+                      <p className="text-[9px] text-white leading-tight truncate">
+                        {photo.caption}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -335,15 +462,8 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Float animation style */}
+      {/* Fade-in animation style */}
       <style jsx>{`
-        @keyframes polaroid-float {
-          0%, 100% { transform: translateY(0px) rotate(var(--rotation)); }
-          50% { transform: translateY(-8px) rotate(var(--rotation)); }
-        }
-        .polaroid-float {
-          animation: polaroid-float 4s ease-in-out infinite;
-        }
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
