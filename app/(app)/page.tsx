@@ -1,19 +1,21 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, ChevronDown } from "lucide-react";
-import Card from "@/components/ui/Card";
+import { Heart, ChevronDown, Camera, X } from "lucide-react";
 import { MOCK_ACTIVITY } from "@/lib/mock-data";
+import { useCollagePhotos } from "@/lib/hooks/useCollagePhotos";
 
-const quickAccess = [
-  { title: "Quotes", emoji: "💬", href: "/vault/quotes", color: "text-accent" },
-  { title: "Moments", emoji: "✨", href: "/vault/moments", color: "text-chloe" },
-  { title: "Recs", emoji: "🎬", href: "/vault/recommendations", color: "text-michael" },
-  { title: "Topics", emoji: "💭", href: "/vault/topics", color: "text-chloe" },
-  { title: "Nightmares", emoji: "😱", href: "/vault/nightmares", color: "text-michael" },
-  { title: "Chat", emoji: "💬", href: "/chat", color: "text-accent" },
+const ROTATIONS = [-7, 4, -3, 6, -5, 8, -2, 5];
+const POSITIONS = [
+  { top: "8%", left: "5%" },
+  { top: "2%", left: "52%" },
+  { top: "45%", left: "15%" },
+  { top: "40%", left: "55%" },
+  { top: "20%", left: "32%" },
+  { top: "55%", left: "38%" },
+  { top: "10%", left: "70%" },
+  { top: "50%", left: "2%" },
 ];
 
 function relativeTime(dateStr: string) {
@@ -34,9 +36,13 @@ export default function HomePage() {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const touchStartX = useRef(0);
   const touchCurrentX = useRef(0);
   const activeEl = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { photos, addPhoto, removePhoto } = useCollagePhotos();
 
   const visibleItems = MOCK_ACTIVITY.filter((item) => !dismissed.has(item.id));
   const displayItems = expanded ? visibleItems : visibleItems.slice(0, 3);
@@ -71,6 +77,13 @@ export default function HomePage() {
     activeEl.current = null;
   }, []);
 
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await addPhoto(file, "", "michael");
+    e.target.value = "";
+  }, [addPhoto]);
+
   return (
     <div className="px-5 pt-14">
       {/* Header */}
@@ -85,7 +98,7 @@ export default function HomePage() {
         <p className="text-sm text-text-muted">Let&apos;s have fun with this ;)</p>
       </div>
 
-      {/* Recent Activity — expandable */}
+      {/* Recent Activity */}
       <div className="mb-6 animate-fade-in-up" style={{ animationDelay: "0.1s" } as React.CSSProperties}>
         <button
           onClick={() => setExpanded(!expanded)}
@@ -120,17 +133,85 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Quick Access Grid — 3x2 */}
-      <div className="mb-6 grid grid-cols-3 gap-3 animate-fade-in-up" style={{ animationDelay: "0.2s" } as React.CSSProperties}>
-        {quickAccess.map((item) => (
-          <Link key={item.href} href={item.href}>
-            <Card className="flex flex-col items-center gap-2 py-5">
-              <span className="text-2xl">{item.emoji}</span>
-              <span className={`text-sm font-medium ${item.color}`}>{item.title}</span>
-            </Card>
-          </Link>
-        ))}
+      {/* Floating Polaroid Collage */}
+      <div
+        className="relative mb-6 animate-fade-in-up"
+        style={{ animationDelay: "0.2s", height: "280px" } as React.CSSProperties}
+      >
+        <h2 className="mb-2 text-sm font-semibold text-text-muted">Our Photos</h2>
+        <div className="relative h-full w-full">
+          {photos.map((photo, i) => {
+            const rotation = ROTATIONS[i % ROTATIONS.length];
+            const pos = POSITIONS[i % POSITIONS.length];
+            const delay = i * 0.7;
+            return (
+              <div
+                key={photo.id}
+                onClick={() => setSelectedPhoto(selectedPhoto === photo.id ? null : photo.id)}
+                className="polaroid-float absolute cursor-pointer transition-transform duration-200 hover:scale-110 hover:z-10"
+                style={{
+                  top: pos.top,
+                  left: pos.left,
+                  transform: `rotate(${rotation}deg)`,
+                  animationDelay: `${delay}s`,
+                  zIndex: selectedPhoto === photo.id ? 20 : i,
+                }}
+              >
+                <div className="relative rounded-sm bg-white p-[6px] shadow-lg" style={{ width: "110px" }}>
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || "Collage photo"}
+                    className="h-[90px] w-full rounded-[2px] object-cover"
+                  />
+                  {photo.caption && (
+                    <p className="mt-1 text-center text-[9px] text-gray-500 leading-tight truncate">
+                      {photo.caption}
+                    </p>
+                  )}
+                  {selectedPhoto === photo.id && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removePhoto(photo.id);
+                        setSelectedPhoto(null);
+                      }}
+                      className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-md"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Add photo button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute bottom-2 right-2 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-md transition-transform active:scale-95"
+          >
+            <Camera size={18} className="text-text-muted" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
       </div>
+
+      {/* Float animation style */}
+      <style jsx>{`
+        @keyframes polaroid-float {
+          0%, 100% { transform: translateY(0px) rotate(var(--rotation)); }
+          50% { transform: translateY(-8px) rotate(var(--rotation)); }
+        }
+        .polaroid-float {
+          animation: polaroid-float 4s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }

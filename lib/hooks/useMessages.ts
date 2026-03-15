@@ -45,6 +45,10 @@ export function useMessages() {
         text,
         voice_url: null,
         duration: null,
+        status: "sent",
+        is_pinned: false,
+        pinned_at: null,
+        pinned_by: null,
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, msg]);
@@ -62,6 +66,10 @@ export function useMessages() {
         text: null,
         voice_url: URL.createObjectURL(blob),
         duration,
+        status: "sent",
+        is_pinned: false,
+        pinned_at: null,
+        pinned_by: null,
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, msg]);

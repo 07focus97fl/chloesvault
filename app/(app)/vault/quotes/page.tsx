@@ -3,7 +3,7 @@
 import { useState } from "react";
 import BackHeader from "@/components/ui/BackHeader";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Plus, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { QUOTE_CATEGORIES } from "@/lib/constants";
 import { useQuotes } from "@/lib/hooks/useQuotes";

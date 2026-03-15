@@ -2,6 +2,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type UserRole = "michael" | "chloe";
 export type MessageType = "text" | "voice";
+export type MessageStatus = "sent" | "delivered" | "read";
 export type RecCategory = "movie" | "book" | "song" | "show" | "podcast" | "other";
 export type QuoteCategory = "racist" | "out_of_context" | "libtard";
 
@@ -16,6 +17,10 @@ export interface Database {
           text: string | null;
           voice_url: string | null;
           duration: number | null;
+          status: MessageStatus;
+          is_pinned: boolean;
+          pinned_at: string | null;
+          pinned_by: UserRole | null;
           created_at: string;
         };
         Insert: {
@@ -25,6 +30,10 @@ export interface Database {
           text?: string | null;
           voice_url?: string | null;
           duration?: number | null;
+          status?: MessageStatus;
+          is_pinned?: boolean;
+          pinned_at?: string | null;
+          pinned_by?: UserRole | null;
           created_at?: string;
         };
         Update: {
@@ -34,6 +43,10 @@ export interface Database {
           text?: string | null;
           voice_url?: string | null;
           duration?: number | null;
+          status?: MessageStatus;
+          is_pinned?: boolean;
+          pinned_at?: string | null;
+          pinned_by?: UserRole | null;
           created_at?: string;
         };
         Relationships: [];
@@ -152,6 +165,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      collage_photos: {
+        Row: {
+          id: string;
+          url: string;
+          caption: string | null;
+          added_by: UserRole;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          url: string;
+          caption?: string | null;
+          added_by: UserRole;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          url?: string;
+          caption?: string | null;
+          added_by?: UserRole;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       activity: {
         Row: {
           id: string;
@@ -195,3 +232,20 @@ export type Moment = Database["chloesvault"]["Tables"]["moments"]["Row"];
 export type Recommendation = Database["chloesvault"]["Tables"]["recommendations"]["Row"];
 export type Topic = Database["chloesvault"]["Tables"]["topics"]["Row"];
 export type Activity = Database["chloesvault"]["Tables"]["activity"]["Row"];
+export type CollagePhoto = Database["chloesvault"]["Tables"]["collage_photos"]["Row"];
+
+export interface MessageFolder {
+  id: string;
+  name: string;
+  emoji: string;
+  created_by: UserRole;
+  created_at: string;
+}
+
+export interface MessageFolderItem {
+  id: string;
+  folder_id: string;
+  message_id: string;
+  added_by: UserRole;
+  added_at: string;
+}

@@ -20,6 +20,10 @@ CREATE TABLE chloesvault.messages (
   text TEXT,
   voice_url TEXT,
   duration INTEGER,
+  status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
+  is_pinned BOOLEAN NOT NULL DEFAULT false,
+  pinned_at TIMESTAMPTZ,
+  pinned_by TEXT CHECK (pinned_by IN ('michael', 'chloe')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -29,6 +33,12 @@ CREATE POLICY "Allow all access to messages"
   ON chloesvault.messages FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
 CREATE INDEX idx_messages_created_at ON chloesvault.messages(created_at);
+CREATE INDEX idx_messages_pinned ON chloesvault.messages(is_pinned) WHERE is_pinned = true;
+
+-- Full-text search on message text
+ALTER TABLE chloesvault.messages ADD COLUMN text_search tsvector
+  GENERATED ALWAYS AS (to_tsvector('english', coalesce(text, ''))) STORED;
+CREATE INDEX idx_messages_text_search ON chloesvault.messages USING GIN (text_search);
 
 -- Quotes (monthly quote game with categories)
 CREATE TABLE chloesvault.quotes (
@@ -112,6 +122,38 @@ CREATE POLICY "Allow all access to activity"
 
 CREATE INDEX idx_activity_created_at ON chloesvault.activity(created_at);
 
+-- Message Folders
+CREATE TABLE chloesvault.message_folders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  emoji TEXT NOT NULL DEFAULT '📁',
+  created_by TEXT NOT NULL CHECK (created_by IN ('michael', 'chloe')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.message_folders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to message_folders"
+  ON chloesvault.message_folders FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+-- Message Folder Items (junction table)
+CREATE TABLE chloesvault.message_folder_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  folder_id UUID NOT NULL REFERENCES chloesvault.message_folders(id) ON DELETE CASCADE,
+  message_id UUID NOT NULL REFERENCES chloesvault.messages(id) ON DELETE CASCADE,
+  added_by TEXT NOT NULL CHECK (added_by IN ('michael', 'chloe')),
+  added_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(folder_id, message_id)
+);
+
+ALTER TABLE chloesvault.message_folder_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to message_folder_items"
+  ON chloesvault.message_folder_items FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+CREATE INDEX idx_folder_items_folder ON chloesvault.message_folder_items(folder_id);
+CREATE INDEX idx_folder_items_message ON chloesvault.message_folder_items(message_id);
+
 -- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE chloesvault.messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE chloesvault.activity;
@@ -132,3 +174,25 @@ CREATE POLICY "Anyone can upload voice notes"
 CREATE POLICY "Anyone can read voice notes"
   ON storage.objects FOR SELECT TO anon, authenticated
   USING (bucket_id = 'voice-notes');
+
+-- Collage photos table
+CREATE TABLE chloesvault.collage_photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url TEXT NOT NULL,
+  caption TEXT,
+  added_by TEXT NOT NULL CHECK (added_by IN ('michael', 'chloe')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE chloesvault.collage_photos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access to collage_photos"
+  ON chloesvault.collage_photos FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+-- Storage bucket for collage photos
+INSERT INTO storage.buckets (id, name, public) VALUES ('collage-photos', 'collage-photos', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+CREATE POLICY "Anyone can upload collage photos"
+  ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'collage-photos');
+CREATE POLICY "Anyone can read collage photos"
+  ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'collage-photos');
+CREATE POLICY "Anyone can delete collage photos"
+  ON storage.objects FOR DELETE TO anon, authenticated USING (bucket_id = 'collage-photos');

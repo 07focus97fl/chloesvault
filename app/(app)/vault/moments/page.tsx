@@ -3,7 +3,7 @@
 import { useState } from "react";
 import BackHeader from "@/components/ui/BackHeader";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { MOCK_MOMENTS } from "@/lib/mock-data";
 import type { Moment } from "@/lib/types/database";
