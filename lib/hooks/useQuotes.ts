@@ -32,16 +32,22 @@ export function useQuotes() {
     if (data) setQuotes(data);
   }, [supabase]);
 
-  const setCurrentQuote = useCallback(async (id: string) => {
-    if (USE_MOCK) {
-      setQuotes((prev) => prev.map((q) => ({ ...q, is_current: q.id === id })));
-      return;
-    }
-    await supabase.from("quotes").update({ is_current: false }).neq("id", id);
-    await supabase.from("quotes").update({ is_current: true }).eq("id", id);
-    const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
-    if (data) setQuotes(data);
-  }, [supabase]);
+  const getQuotesByMonth = useCallback((month: string) => {
+    return quotes.filter((q) => q.month === month);
+  }, [quotes]);
 
-  return { quotes, loading, addQuote, setCurrentQuote };
+  const getQuotesByCategoryAndMonth = useCallback((category: string, month: string) => {
+    return quotes.filter((q) => q.category === category && q.month === month);
+  }, [quotes]);
+
+  const getMonths = useCallback(() => {
+    const months = [...new Set(quotes.map((q) => q.month))];
+    return months.sort((a, b) => {
+      const dateA = new Date(a);
+      const dateB = new Date(b);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [quotes]);
+
+  return { quotes, loading, addQuote, getQuotesByMonth, getQuotesByCategoryAndMonth, getMonths };
 }

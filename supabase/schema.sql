@@ -30,14 +30,14 @@ CREATE POLICY "Allow all access to messages"
 
 CREATE INDEX idx_messages_created_at ON chloesvault.messages(created_at);
 
--- Quotes
+-- Quotes (monthly quote game with categories)
 CREATE TABLE chloesvault.quotes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   text TEXT NOT NULL,
   author TEXT NOT NULL,
-  month TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('racist', 'out_of_context', 'libtard')),
+  month TEXT NOT NULL,  -- format: "March 2026"
   added_by TEXT NOT NULL CHECK (added_by IN ('michael', 'chloe')),
-  is_current BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -46,7 +46,8 @@ ALTER TABLE chloesvault.quotes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access to quotes"
   ON chloesvault.quotes FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
-CREATE INDEX idx_quotes_is_current ON chloesvault.quotes(is_current);
+CREATE INDEX idx_quotes_category_month ON chloesvault.quotes(category, month);
+CREATE INDEX idx_quotes_month ON chloesvault.quotes(month);
 
 -- Moments
 CREATE TABLE chloesvault.moments (

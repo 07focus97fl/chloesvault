@@ -3,6 +3,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type UserRole = "michael" | "chloe";
 export type MessageType = "text" | "voice";
 export type RecCategory = "movie" | "book" | "song" | "show" | "podcast" | "other";
+export type QuoteCategory = "racist" | "out_of_context" | "libtard";
 
 export interface Database {
   chloesvault: {
@@ -42,27 +43,27 @@ export interface Database {
           id: string;
           text: string;
           author: string;
+          category: QuoteCategory;
           month: string;
           added_by: UserRole;
-          is_current: boolean;
           created_at: string;
         };
         Insert: {
           id?: string;
           text: string;
           author: string;
+          category: QuoteCategory;
           month: string;
           added_by: UserRole;
-          is_current?: boolean;
           created_at?: string;
         };
         Update: {
           id?: string;
           text?: string;
           author?: string;
+          category?: QuoteCategory;
           month?: string;
           added_by?: UserRole;
-          is_current?: boolean;
           created_at?: string;
         };
         Relationships: [];

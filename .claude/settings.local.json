@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(cd C:/dev/chloesvault && npm install @supabase/supabase-js @supabase/ssr lucide-react)",
-      "Bash(cd C:/dev/chloesvault && npm run build 2>&1 | tail -25)"
+      "Bash(cd C:/dev/chloesvault && npm run build 2>&1 | tail -25)",
+      "WebSearch",
+      "WebFetch(domain:ui.shadcn.com)"
     ]
   }
 }

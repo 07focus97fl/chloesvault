@@ -60,21 +60,39 @@ export const MOCK_MESSAGES: Message[] = [
 export const MOCK_QUOTES: Quote[] = [
   {
     id: "1",
-    text: "In all the world, there is no heart for me like yours. In all the world, there is no love for you like mine.",
-    author: "Maya Angelou",
+    text: "I'm not racist, but...",
+    author: "Uncle Dave",
+    category: "racist",
     month: "March 2026",
     added_by: "michael",
-    is_current: true,
-    created_at: "2026-03-01T00:00:00Z",
+    created_at: "2026-03-05T00:00:00Z",
   },
   {
     id: "2",
-    text: "Whatever our souls are made of, his and mine are the same.",
-    author: "Emily Brontë",
+    text: "I just think it's interesting that...",
+    author: "Grandma",
+    category: "racist",
+    month: "March 2026",
+    added_by: "chloe",
+    created_at: "2026-03-08T00:00:00Z",
+  },
+  {
+    id: "3",
+    text: "I need you to come over and help me with my pipe",
+    author: "Dad",
+    category: "out_of_context",
+    month: "March 2026",
+    added_by: "michael",
+    created_at: "2026-03-10T00:00:00Z",
+  },
+  {
+    id: "4",
+    text: "Well actually the electoral college exists for a reason",
+    author: "That guy at the party",
+    category: "libtard",
     month: "February 2026",
     added_by: "chloe",
-    is_current: false,
-    created_at: "2026-02-01T00:00:00Z",
+    created_at: "2026-02-15T00:00:00Z",
   },
 ];
 
@@ -187,29 +205,33 @@ export const MOCK_TOPICS: Topic[] = [
   },
 ];
 
-export const MOCK_ACTIVITY: Activity[] = [
+export const MOCK_ACTIVITY: (Activity & { href: string })[] = [
   {
     id: "1",
     emoji: "💬",
     text: "Michael sent a voice note",
     created_at: "2026-03-15T08:07:00Z",
+    href: "/chat",
   },
   {
     id: "2",
     emoji: "📝",
     text: "Chloe added a new topic",
     created_at: "2026-03-14T22:00:00Z",
+    href: "/vault/topics",
   },
   {
     id: "3",
     emoji: "✅",
     text: "Michael marked \"Past Lives\" as watched",
     created_at: "2026-03-14T20:00:00Z",
+    href: "/vault/recommendations",
   },
   {
     id: "4",
     emoji: "💛",
     text: "New quote of the month set",
     created_at: "2026-03-01T00:00:00Z",
+    href: "/vault/quotes",
   },
 ];
