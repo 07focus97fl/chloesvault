@@ -1,0 +1,215 @@
+import type { Message, Quote, Moment, Recommendation, Topic, Activity } from "@/lib/types/database";
+
+export const MOCK_MESSAGES: Message[] = [
+  {
+    id: "1",
+    from_user: "michael",
+    type: "text",
+    text: "Good morning beautiful 💛",
+    voice_url: null,
+    duration: null,
+    created_at: "2026-03-15T08:00:00Z",
+  },
+  {
+    id: "2",
+    from_user: "chloe",
+    type: "text",
+    text: "Good morning!! I miss you so much 🥺",
+    voice_url: null,
+    duration: null,
+    created_at: "2026-03-15T08:02:00Z",
+  },
+  {
+    id: "3",
+    from_user: "michael",
+    type: "text",
+    text: "I miss you too. Only 12 more days!",
+    voice_url: null,
+    duration: null,
+    created_at: "2026-03-15T08:03:00Z",
+  },
+  {
+    id: "4",
+    from_user: "chloe",
+    type: "text",
+    text: "I can't wait 😭 What are you up to today?",
+    voice_url: null,
+    duration: null,
+    created_at: "2026-03-15T08:05:00Z",
+  },
+  {
+    id: "5",
+    from_user: "michael",
+    type: "voice",
+    text: null,
+    voice_url: "/mock-voice.webm",
+    duration: 12,
+    created_at: "2026-03-15T08:07:00Z",
+  },
+  {
+    id: "6",
+    from_user: "chloe",
+    type: "text",
+    text: "Aww that's so sweet, send me more voice notes 🥰",
+    voice_url: null,
+    duration: null,
+    created_at: "2026-03-15T08:09:00Z",
+  },
+];
+
+export const MOCK_QUOTES: Quote[] = [
+  {
+    id: "1",
+    text: "In all the world, there is no heart for me like yours. In all the world, there is no love for you like mine.",
+    author: "Maya Angelou",
+    month: "March 2026",
+    added_by: "michael",
+    is_current: true,
+    created_at: "2026-03-01T00:00:00Z",
+  },
+  {
+    id: "2",
+    text: "Whatever our souls are made of, his and mine are the same.",
+    author: "Emily Brontë",
+    month: "February 2026",
+    added_by: "chloe",
+    is_current: false,
+    created_at: "2026-02-01T00:00:00Z",
+  },
+];
+
+export const MOCK_MOMENTS: Moment[] = [
+  {
+    id: "1",
+    title: "First Video Call",
+    date: "2025-06-15",
+    emoji: "📹",
+    description: "We talked for 4 hours and didn't want to hang up",
+    added_by: "michael",
+    created_at: "2025-06-16T00:00:00Z",
+  },
+  {
+    id: "2",
+    title: "Said I Love You",
+    date: "2025-09-20",
+    emoji: "❤️",
+    description: "Under the stars, even through a screen",
+    added_by: "chloe",
+    created_at: "2025-09-21T00:00:00Z",
+  },
+  {
+    id: "3",
+    title: "First Visit",
+    date: "2025-12-20",
+    emoji: "✈️",
+    description: "The airport hug that lasted forever",
+    added_by: "michael",
+    created_at: "2025-12-21T00:00:00Z",
+  },
+];
+
+export const MOCK_RECOMMENDATIONS: Recommendation[] = [
+  {
+    id: "1",
+    title: "Past Lives",
+    category: "movie",
+    from_user: "michael",
+    emoji: "🎬",
+    done: true,
+    created_at: "2026-01-10T00:00:00Z",
+  },
+  {
+    id: "2",
+    title: "Normal People",
+    category: "show",
+    from_user: "chloe",
+    emoji: "📺",
+    done: false,
+    created_at: "2026-02-05T00:00:00Z",
+  },
+  {
+    id: "3",
+    title: "The Song of Achilles",
+    category: "book",
+    from_user: "chloe",
+    emoji: "📚",
+    done: false,
+    created_at: "2026-02-14T00:00:00Z",
+  },
+  {
+    id: "4",
+    title: "Lover - Taylor Swift",
+    category: "song",
+    from_user: "michael",
+    emoji: "🎵",
+    done: true,
+    created_at: "2026-01-20T00:00:00Z",
+  },
+  {
+    id: "5",
+    title: "Where Should We Begin?",
+    category: "podcast",
+    from_user: "chloe",
+    emoji: "🎙️",
+    done: false,
+    created_at: "2026-03-01T00:00:00Z",
+  },
+];
+
+export const MOCK_TOPICS: Topic[] = [
+  {
+    id: "1",
+    text: "If we could live anywhere in the world together, where would it be?",
+    used: false,
+    added_by: "michael",
+    created_at: "2026-03-10T00:00:00Z",
+  },
+  {
+    id: "2",
+    text: "What's a childhood memory that shaped who you are?",
+    used: false,
+    added_by: "chloe",
+    created_at: "2026-03-08T00:00:00Z",
+  },
+  {
+    id: "3",
+    text: "Dream date night when we're finally together?",
+    used: true,
+    added_by: "michael",
+    created_at: "2026-02-28T00:00:00Z",
+  },
+  {
+    id: "4",
+    text: "What are we most grateful for about each other?",
+    used: true,
+    added_by: "chloe",
+    created_at: "2026-02-20T00:00:00Z",
+  },
+];
+
+export const MOCK_ACTIVITY: Activity[] = [
+  {
+    id: "1",
+    emoji: "💬",
+    text: "Michael sent a voice note",
+    created_at: "2026-03-15T08:07:00Z",
+  },
+  {
+    id: "2",
+    emoji: "📝",
+    text: "Chloe added a new topic",
+    created_at: "2026-03-14T22:00:00Z",
+  },
+  {
+    id: "3",
+    emoji: "✅",
+    text: "Michael marked \"Past Lives\" as watched",
+    created_at: "2026-03-14T20:00:00Z",
+  },
+  {
+    id: "4",
+    emoji: "💛",
+    text: "New quote of the month set",
+    created_at: "2026-03-01T00:00:00Z",
+  },
+];
