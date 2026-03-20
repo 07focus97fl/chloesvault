@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Send, Mic, ImageIcon } from "lucide-react";
 
 interface ChatInputProps {
@@ -13,11 +13,25 @@ interface ChatInputProps {
 export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOpen }: ChatInputProps) {
   const [text, setText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const resizeTextarea = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${ta.scrollHeight}px`;
+  }, []);
 
   const handleSend = () => {
     if (!text.trim()) return;
     onSend(text.trim());
     setText("");
+    // Reset height after sending
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +45,7 @@ export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOp
 
   return (
     <div className="shrink-0 border-t border-border bg-surface/80 px-4 py-3 backdrop-blur-xl">
-      <div className="flex items-center gap-2">
+      <div className="flex items-end gap-2">
         <button
           onClick={onVoiceStart}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-text-muted transition-colors hover:text-accent"
@@ -57,13 +71,22 @@ export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOp
         >
           GIF
         </button>
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onChange={(e) => {
+            setText(e.target.value);
+            resizeTextarea();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          rows={1}
           placeholder="Type a message..."
-          className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-text placeholder:text-text-dim focus:border-accent/50 focus:outline-none"
+          className="flex-1 max-h-32 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-text placeholder:text-text-dim focus:border-accent/50 focus:outline-none"
         />
         <button
           onClick={handleSend}
