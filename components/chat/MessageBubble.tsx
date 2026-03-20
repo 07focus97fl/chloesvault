@@ -282,20 +282,22 @@ export default function MessageBubble({
             {message.is_pinned && (
               <Pin size={10} className="absolute right-2 top-2 z-10 text-cv-accent drop-shadow" />
             )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (message.type === "image") setLightboxOpen(true);
-              }}
-              className="block w-full"
-            >
-              <img
-                src={message.media_url ?? ""}
-                alt={message.type === "gif" ? "GIF" : "Photo"}
-                className="max-w-[240px] w-full rounded-t-xl object-cover"
-                loading="lazy"
-              />
-            </button>
+            {message.media_url && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (message.type === "image") setLightboxOpen(true);
+                }}
+                className="block w-full"
+              >
+                <img
+                  src={message.media_url}
+                  alt={message.type === "gif" ? "GIF" : "Photo"}
+                  className="max-w-[240px] w-full rounded-t-xl object-cover"
+                  loading="lazy"
+                />
+              </button>
+            )}
             <div className={`flex items-center gap-1.5 px-3 py-1.5 ${isMine ? "justify-end" : ""}`}>
               <span className="text-[10px] text-text-dim">{timeStr}</span>
               <StatusIcon status={message.status} isMine={isMine} />

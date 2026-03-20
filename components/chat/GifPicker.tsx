@@ -58,13 +58,13 @@ export default function GifPicker({ open, onOpenChange, onSelect }: GifPickerPro
             <div className="columns-2 gap-2">
               {results.map((gif) => (
                 <button
-                  key={gif.id}
+                  key={gif.slug}
                   onClick={() => handleSelect(gif.url)}
                   className="mb-2 w-full overflow-hidden rounded-lg transition-transform hover:scale-[1.02] active:scale-95"
                 >
                   <img
                     src={gif.preview}
-                    alt="GIF"
+                    alt={gif.title || "GIF"}
                     width={gif.width}
                     height={gif.height}
                     className="w-full rounded-lg"

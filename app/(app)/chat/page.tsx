@@ -132,9 +132,13 @@ export default function ChatPage() {
     sendMessage(currentUserRole, text);
   };
 
-  const handleVoiceSend = (blob: Blob, duration: number) => {
-    sendVoiceNote(currentUserRole, blob, duration);
+  const handleVoiceSend = async (blob: Blob, duration: number) => {
+    const result = await sendVoiceNote(currentUserRole, blob, duration);
     setShowVoiceRecorder(false);
+    if (!result.success) {
+      setToast("Failed to send voice note");
+      setTimeout(() => setToast(null), 3000);
+    }
   };
 
   const handleImageSend = (file: File) => {

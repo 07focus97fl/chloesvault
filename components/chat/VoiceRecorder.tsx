@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Mic, Square, Send } from "lucide-react";
+import { Mic, Square, Send, Loader2 } from "lucide-react";
 
 interface VoiceRecorderProps {
-  onSend: (blob: Blob, duration: number) => void;
+  onSend: (blob: Blob, duration: number) => Promise<void> | void;
   onCancel: () => void;
 }
 
@@ -12,6 +12,7 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
   const [recording, setRecording] = useState(false);
   const [duration, setDuration] = useState(0);
   const [blob, setBlob] = useState<Blob | null>(null);
+  const [sending, setSending] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -48,8 +49,11 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  const handleSend = () => {
-    if (blob) onSend(blob, duration);
+  const handleSend = async () => {
+    if (blob && !sending) {
+      setSending(true);
+      await onSend(blob, duration);
+    }
   };
 
   const formatTime = (s: number) =>
@@ -58,7 +62,7 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
   return (
     <div className="shrink-0 border-t border-border bg-surface px-4 py-4">
       <div className="flex items-center justify-between">
-        <button onClick={onCancel} className="text-sm text-text-muted hover:text-text">
+        <button onClick={onCancel} disabled={sending} className={`text-sm text-text-muted hover:text-text ${sending ? "opacity-50 pointer-events-none" : ""}`}>
           Cancel
         </button>
 
@@ -91,9 +95,10 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
           {blob && !recording && (
             <button
               onClick={handleSend}
+              disabled={sending}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-bg"
             >
-              <Send size={18} />
+              {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             </button>
           )}
         </div>

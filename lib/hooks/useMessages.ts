@@ -122,13 +122,15 @@ export function useMessages() {
     }
   }, [supabase]);
 
-  const sendVoiceNote = useCallback(async (fromUser: UserRole, blob: Blob, duration: number) => {
+  const sendVoiceNote = useCallback(async (fromUser: UserRole, blob: Blob, duration: number): Promise<{ success: boolean }> => {
+    const blobUrl = URL.createObjectURL(blob);
+    const optimisticId = crypto.randomUUID();
     const optimistic: Message = {
-      id: crypto.randomUUID(),
+      id: optimisticId,
       from_user: fromUser,
       type: "voice",
       text: null,
-      voice_url: URL.createObjectURL(blob),
+      voice_url: blobUrl,
       media_url: null,
       duration,
       status: "sent",
@@ -139,17 +141,44 @@ export function useMessages() {
     };
     setMessages((prev) => [...prev, optimistic]);
 
-    if (!USE_MOCK) {
-      const fileName = `${fromUser}/${Date.now()}.webm`;
-      await supabase.storage.from("voice-notes").upload(fileName, blob);
-      const { data: { publicUrl } } = supabase.storage.from("voice-notes").getPublicUrl(fileName);
+    if (USE_MOCK) return { success: true };
 
+    try {
+      const fileName = `voice-notes/${fromUser}/${Date.now()}.webm`;
+
+      // Get signed upload URL from API route
+      const res = await fetch("/api/voice-upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName, contentType: "audio/webm" }),
+      });
+      if (!res.ok) throw new Error("Failed to get upload URL");
+      const { uploadUrl, publicUrl } = await res.json();
+
+      // Upload directly to GCS (bypasses Vercel body size limit)
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "audio/webm" },
+        body: blob,
+      });
+      if (!uploadRes.ok) throw new Error("Failed to upload voice note");
+
+      // Store in Supabase DB
       await supabase.from("messages").insert({
         from_user: fromUser,
         type: "voice",
         voice_url: publicUrl,
         duration,
       });
+
+      // Replace optimistic blob URL with real public URL
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...m, voice_url: publicUrl } : m));
+      URL.revokeObjectURL(blobUrl);
+      return { success: true };
+    } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      URL.revokeObjectURL(blobUrl);
+      return { success: false };
     }
   }, [supabase]);
 

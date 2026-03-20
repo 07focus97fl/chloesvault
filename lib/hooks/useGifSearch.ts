@@ -2,35 +2,61 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
-export interface TenorGif {
-  id: string;
+export interface KlipyGif {
+  slug: string;
+  title: string;
   url: string;
   preview: string;
   width: number;
   height: number;
 }
 
-const API_KEY = process.env.NEXT_PUBLIC_TENOR_API_KEY ?? "";
-const TENOR_BASE = "https://tenor.googleapis.com/v2";
+const API_KEY = process.env.NEXT_PUBLIC_KLIPY_API_KEY ?? "";
+const KLIPY_BASE = `https://api.klipy.com/api/v1/${API_KEY}/gifs`;
 
-function mapResults(results: Record<string, unknown>[]): TenorGif[] {
-  return results.map((r: Record<string, unknown>) => {
-    const formats = r.media_formats as Record<string, { url: string; dims: number[] }>;
-    const gif = formats.gif ?? formats.mediumgif;
-    const tiny = formats.tinygif ?? gif;
+interface KlipyFileFormat {
+  url: string;
+  width: number;
+  height: number;
+  size: number;
+}
+
+interface KlipySizeTier {
+  gif: KlipyFileFormat;
+  webp: KlipyFileFormat;
+  jpg: KlipyFileFormat;
+  mp4: KlipyFileFormat;
+}
+
+interface KlipyItem {
+  slug: string;
+  title: string;
+  file: {
+    hd: KlipySizeTier;
+    md: KlipySizeTier;
+    sm: KlipySizeTier;
+    xs: KlipySizeTier;
+  };
+}
+
+function mapResults(items: KlipyItem[]): KlipyGif[] {
+  return items.map((item) => {
+    const full = item.file.md.gif;
+    const thumb = item.file.sm.webp;
     return {
-      id: r.id as string,
-      url: gif.url,
-      preview: tiny.url,
-      width: tiny.dims[0],
-      height: tiny.dims[1],
+      slug: item.slug,
+      title: item.title,
+      url: full.url,
+      preview: thumb.url,
+      width: thumb.width,
+      height: thumb.height,
     };
   });
 }
 
 export function useGifSearch() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<TenorGif[]>([]);
+  const [results, setResults] = useState<KlipyGif[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -39,11 +65,11 @@ export function useGifSearch() {
     setLoading(true);
     try {
       const endpoint = q.trim()
-        ? `${TENOR_BASE}/search?q=${encodeURIComponent(q)}&key=${API_KEY}&limit=20&media_filter=gif,tinygif`
-        : `${TENOR_BASE}/featured?key=${API_KEY}&limit=20&media_filter=gif,tinygif`;
+        ? `${KLIPY_BASE}/search?q=${encodeURIComponent(q)}&per_page=20`
+        : `${KLIPY_BASE}/trending?per_page=20`;
       const res = await fetch(endpoint);
-      const data = await res.json();
-      setResults(mapResults(data.results ?? []));
+      const json = await res.json();
+      setResults(mapResults(json.data?.data ?? []));
     } catch {
       setResults([]);
     } finally {
