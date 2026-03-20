@@ -27,7 +27,7 @@ export default function MomentsPage() {
 
   // Group moments by month
   const groupedMoments = moments.reduce<Record<string, typeof moments>>((groups, moment) => {
-    const d = new Date(moment.date);
+    const d = new Date(moment.date + "T00:00:00");
     const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push(moment);
@@ -233,7 +233,7 @@ export default function MomentsPage() {
                                 </div>
                                 <p className="mb-1 text-sm text-text/80">{moment.description}</p>
                                 <p className="text-xs text-text-dim">
-                                  {new Date(moment.date).toLocaleDateString("en", {
+                                  {new Date(moment.date + "T00:00:00").toLocaleDateString("en", {
                                     month: "long",
                                     day: "numeric",
                                     year: "numeric",

@@ -7,7 +7,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { Message } from "@/lib/types/database";
+import { REACTION_EMOJIS } from "@/lib/hooks/useMessageReactions";
+import type { Message, MessageReaction } from "@/lib/types/database";
 
 interface MessageActionsProps {
   message: Message | null;
@@ -15,6 +16,8 @@ interface MessageActionsProps {
   onOpenChange: (open: boolean) => void;
   onPin: (message: Message) => void;
   onAddToFolder: (message: Message) => void;
+  onReaction?: (messageId: string, emoji: string) => void;
+  myReaction?: MessageReaction | null;
 }
 
 export default function MessageActions({
@@ -23,6 +26,8 @@ export default function MessageActions({
   onOpenChange,
   onPin,
   onAddToFolder,
+  onReaction,
+  myReaction,
 }: MessageActionsProps) {
   if (!message) return null;
 
@@ -63,6 +68,29 @@ export default function MessageActions({
         <SheetHeader className="pb-2">
           <SheetTitle className="text-sm text-text-muted">Message Actions</SheetTitle>
         </SheetHeader>
+
+        {/* Emoji reaction picker */}
+        {onReaction && (
+          <div className="flex items-center justify-center gap-2 pb-3 mb-2 border-b border-border">
+            {REACTION_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => {
+                  onReaction(message.id, emoji);
+                  onOpenChange(false);
+                }}
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-lg transition-all active:scale-90 ${
+                  myReaction?.emoji === emoji
+                    ? "bg-accent/20 ring-2 ring-accent/50 scale-110"
+                    : "bg-card hover:bg-border/50"
+                }`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex flex-col gap-1">
           {actions.map((action) => (
             <button

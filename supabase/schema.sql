@@ -307,3 +307,22 @@ CREATE POLICY "Allow all access to push_subscriptions"
   ON chloesvault.push_subscriptions FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
 
 CREATE INDEX idx_push_subscriptions_user ON chloesvault.push_subscriptions(user_role);
+
+-- Message Reactions (iMessage-style tapback)
+CREATE TABLE chloesvault.message_reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id UUID NOT NULL REFERENCES chloesvault.messages(id) ON DELETE CASCADE,
+  from_user TEXT NOT NULL CHECK (from_user IN ('michael', 'chloe')),
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(message_id, from_user)
+);
+
+ALTER TABLE chloesvault.message_reactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to message_reactions"
+  ON chloesvault.message_reactions FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+CREATE INDEX idx_message_reactions_message ON chloesvault.message_reactions(message_id);
+
+ALTER PUBLICATION supabase_realtime ADD TABLE chloesvault.message_reactions;

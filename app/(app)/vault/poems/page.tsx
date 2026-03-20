@@ -135,7 +135,7 @@ export default function PoemsPage() {
                           <div>
                             <h3 className="font-heading text-base font-semibold">{poem.title}</h3>
                             <p className="mt-1 text-xs text-text-dim">
-                              {new Date(poem.date).toLocaleDateString("en", { month: "long", day: "numeric", year: "numeric" })}
+                              {new Date(poem.date + "T00:00:00").toLocaleDateString("en", { month: "long", day: "numeric", year: "numeric" })}
                               {" · "}
                               <span className={poem.from_user === "michael" ? "text-michael" : "text-chloe"}>
                                 {capitalize(poem.from_user)}

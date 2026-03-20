@@ -18,6 +18,7 @@ import { groupMessagesByDate } from "@/lib/utils/date";
 import { useMessageSearch } from "@/lib/hooks/useMessageSearch";
 import { usePinnedMessages } from "@/lib/hooks/usePinnedMessages";
 import { useMessageFolders } from "@/lib/hooks/useMessageFolders";
+import { useMessageReactions } from "@/lib/hooks/useMessageReactions";
 import { usePresence } from "@/lib/hooks/usePresence";
 import { Loader2 } from "lucide-react";
 import type { Message } from "@/lib/types/database";
@@ -75,6 +76,8 @@ export default function ChatPage() {
     removeFromFolder,
     getMessageFolderIds,
   } = useMessageFolders();
+
+  const { getReactions, toggleReaction } = useMessageReactions();
 
   const messageGroups = groupMessagesByDate(messages);
 
@@ -246,6 +249,7 @@ export default function ChatPage() {
                         highlightQuery={searchOpen ? search.query : undefined}
                         isSearchTarget={search.currentMessageId === msg.id}
                         onLongPress={() => setActionMessage(msg)}
+                        reactions={getReactions(msg.id)}
                         notes={msg.type === "voice" ? getNotesForMessage(msg.id) : undefined}
                         onAddNote={msg.type === "voice" ? addNote : undefined}
                         onDeleteNote={msg.type === "voice" ? deleteNote : undefined}
@@ -285,6 +289,8 @@ export default function ChatPage() {
           setActionMessage(null);
           setFolderPickerMessage(msg);
         }}
+        onReaction={(messageId, emoji) => toggleReaction(messageId, emoji, currentUserRole)}
+        myReaction={actionMessage ? getReactions(actionMessage.id).find((r) => r.from_user === currentUserRole) ?? null : null}
       />
 
       <PinnedMessagesPanel

@@ -429,6 +429,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      message_reactions: {
+        Row: {
+          id: string;
+          message_id: string;
+          from_user: UserRole;
+          emoji: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          from_user: UserRole;
+          emoji: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          message_id?: string;
+          from_user?: UserRole;
+          emoji?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       message_folder_items: {
         Row: {
           id: string;
@@ -480,6 +504,7 @@ export type Poem = Database["chloesvault"]["Tables"]["poems"]["Row"];
 export type Nightmare = Database["chloesvault"]["Tables"]["nightmares"]["Row"];
 export type Activity = Database["chloesvault"]["Tables"]["activity"]["Row"];
 export type CollagePhoto = Database["chloesvault"]["Tables"]["collage_photos"]["Row"];
+export type MessageReaction = Database["chloesvault"]["Tables"]["message_reactions"]["Row"];
 
 export interface MessageFolder {
   id: string;

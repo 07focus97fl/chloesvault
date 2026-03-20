@@ -30,7 +30,7 @@ serve(async (req) => {
     const recipient = actor === "michael" ? "chloe" : "michael";
 
     // Build notification
-    const notification = buildNotification(table, record);
+    const notification = buildNotification(table, record, actor);
 
     // Get recipient's push subscriptions
     const supabase = createClient(
@@ -125,98 +125,44 @@ function getActor(
   }
 }
 
-function buildNotification(table: string, record: any) {
+function capitalize(name: string): string {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function buildNotification(table: string, record: any, actor: string) {
+  const name = capitalize(actor);
+
   switch (table) {
     case "messages":
       if (record.type === "voice")
-        return {
-          title: "Voice Note",
-          body: "You received a voice note",
-          url: "/chat",
-          tag: "message",
-        };
+        return { title: name, body: "Sent a voice note", url: "/chat", tag: "message" };
       if (record.type === "image")
-        return {
-          title: "New Photo",
-          body: "You received a photo",
-          url: "/chat",
-          tag: "message",
-        };
+        return { title: name, body: "Sent a photo", url: "/chat", tag: "message" };
       if (record.type === "gif")
-        return {
-          title: "New GIF",
-          body: "You received a GIF",
-          url: "/chat",
-          tag: "message",
-        };
+        return { title: name, body: "Sent a GIF", url: "/chat", tag: "message" };
       return {
-        title: "New Message",
-        body: record.text?.slice(0, 100) || "You have a new message",
+        title: name,
+        body: record.text?.slice(0, 100) || "Sent a message",
         url: "/chat",
         tag: "message",
       };
     case "moments":
-      return {
-        title: "New Moment",
-        body: `${record.emoji || ""} ${record.title}`.trim(),
-        url: "/vault/moments",
-        tag: "vault",
-      };
+      return { title: name, body: `Added a moment: ${record.title}`, url: "/vault/moments", tag: "vault" };
     case "recommendations":
-      return {
-        title: "New Recommendation",
-        body: `${record.emoji || ""} ${record.title}`.trim(),
-        url: "/vault/recommendations",
-        tag: "vault",
-      };
+      return { title: name, body: `Recommended: ${record.title}`, url: "/vault/recommendations", tag: "vault" };
     case "topics":
-      return {
-        title: "New Topic",
-        body: record.text?.slice(0, 80),
-        url: "/vault/topics",
-        tag: "vault",
-      };
+      return { title: name, body: `Added a topic: ${record.text?.slice(0, 80)}`, url: "/vault/topics", tag: "vault" };
     case "quotes":
-      return {
-        title: "New Quote",
-        body: `"${record.text?.slice(0, 80)}"`,
-        url: "/vault/quotes",
-        tag: "vault",
-      };
+      return { title: name, body: `"${record.text?.slice(0, 80)}"`, url: "/vault/quotes", tag: "vault" };
     case "icks":
-      return {
-        title: "New Ick Added",
-        body: record.text?.slice(0, 80),
-        url: `/vault/icks/${record.about}`,
-        tag: "vault",
-      };
+      return { title: name, body: `Added an ick: ${record.text?.slice(0, 80)}`, url: `/vault/icks/${record.about}`, tag: "vault" };
     case "poems":
-      return {
-        title: "New Poem",
-        body: record.title,
-        url: "/vault/poems",
-        tag: "vault",
-      };
+      return { title: name, body: `Wrote you a poem: ${record.title}`, url: "/vault/poems", tag: "vault" };
     case "vault_notes":
-      return {
-        title: "New Note",
-        body: record.text?.slice(0, 80),
-        url: "/vault/notes",
-        tag: "vault",
-      };
+      return { title: name, body: `Added a note: ${record.text?.slice(0, 80)}`, url: "/vault/notes", tag: "vault" };
     case "nightmares":
-      return {
-        title: "New Nightmare",
-        body: record.text?.slice(0, 80),
-        url: `/vault/nightmares/${record.about}`,
-        tag: "vault",
-      };
+      return { title: name, body: `Added a nightmare: ${record.text?.slice(0, 80)}`, url: `/vault/nightmares/${record.about}`, tag: "vault" };
     default:
-      return {
-        title: "ChloeVault",
-        body: "Something new happened!",
-        url: "/",
-        tag: "default",
-      };
+      return { title: name, body: "Did something new", url: "/", tag: "default" };
   }
 }

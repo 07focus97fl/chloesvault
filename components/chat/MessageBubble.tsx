@@ -6,7 +6,7 @@ import { useLongPress } from "@/lib/hooks/useLongPress";
 import ImageLightbox from "@/components/chat/ImageLightbox";
 import SearchHighlight from "@/components/chat/SearchHighlight";
 import { formatMessageTime } from "@/lib/utils/date";
-import type { Message, MessageNote } from "@/lib/types/database";
+import type { Message, MessageNote, MessageReaction } from "@/lib/types/database";
 
 interface MessageBubbleProps {
   message: Message;
@@ -15,6 +15,7 @@ interface MessageBubbleProps {
   isSearchTarget?: boolean;
   onLongPress?: () => void;
   notes?: MessageNote[];
+  reactions?: MessageReaction[];
   onAddNote?: (messageId: string, text: string) => void;
   onDeleteNote?: (noteId: string, messageId: string) => void;
   onPromoteToTopic?: (noteText: string) => void;
@@ -27,6 +28,29 @@ function hashCode(str: string): number {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
   }
   return Math.abs(hash);
+}
+
+function ReactionBadges({ reactions, isMine }: { reactions: MessageReaction[]; isMine: boolean }) {
+  if (reactions.length === 0) return null;
+
+  // Group by emoji
+  const grouped = new Map<string, number>();
+  for (const r of reactions) {
+    grouped.set(r.emoji, (grouped.get(r.emoji) || 0) + 1);
+  }
+
+  return (
+    <div className={`flex gap-1 -mt-1.5 mb-1 ${isMine ? "justify-end pr-2" : "justify-start pl-2"}`}>
+      <div className="flex items-center gap-0.5 rounded-full border border-border bg-card px-1.5 py-0.5 shadow-sm">
+        {Array.from(grouped.entries()).map(([emoji, count]) => (
+          <span key={emoji} className="flex items-center text-sm">
+            {emoji}
+            {count > 1 && <span className="text-[10px] text-text-dim ml-0.5">{count}</span>}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function StatusIcon({ status, isMine }: { status: string; isMine: boolean }) {
@@ -43,6 +67,7 @@ export default function MessageBubble({
   isSearchTarget,
   onLongPress,
   notes = [],
+  reactions = [],
   onAddNote,
   onDeleteNote,
   onPromoteToTopic,
@@ -244,6 +269,8 @@ export default function MessageBubble({
           </div>
         </div>
 
+        <ReactionBadges reactions={reactions} isMine={isMine} />
+
         {/* Notes section */}
         {notesOpen && (
           <div className="mt-1.5 flex flex-col gap-1.5 px-1" onClick={(e) => e.stopPropagation()}>
@@ -346,6 +373,7 @@ export default function MessageBubble({
               <StatusIcon status={message.status} isMine={isMine} />
             </div>
           </div>
+          <ReactionBadges reactions={reactions} isMine={isMine} />
         </div>
         {message.type === "image" && (
           <ImageLightbox
@@ -386,6 +414,7 @@ export default function MessageBubble({
           <StatusIcon status={message.status} isMine={isMine} />
         </div>
       </div>
+      <ReactionBadges reactions={reactions} isMine={isMine} />
     </div>
   );
 }
