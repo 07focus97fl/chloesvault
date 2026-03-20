@@ -26,7 +26,7 @@ export default function PinnedMessagesPanel({
 }: PinnedMessagesPanelProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full border-cv-border bg-bg p-0 sm:max-w-[380px]">
+      <SheetContent side="right" className="w-full max-w-[430px] border-cv-border bg-bg p-0">
         <SheetHeader className="border-b border-cv-border px-5 py-4">
           <SheetTitle className="flex items-center gap-2 text-sm text-text">
             <Pin size={16} className="text-cv-accent" />

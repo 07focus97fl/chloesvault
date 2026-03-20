@@ -45,5 +45,14 @@ export function useActivity() {
     await supabase.from("activity").insert({ emoji, text });
   }, [supabase]);
 
-  return { activity, loading, logActivity };
+  const deleteActivity = useCallback(async (id: string) => {
+    if (USE_MOCK) {
+      setActivity((prev) => prev.filter((a) => a.id !== id));
+      return;
+    }
+    await supabase.from("activity").delete().eq("id", id);
+    setActivity((prev) => prev.filter((a) => a.id !== id));
+  }, [supabase]);
+
+  return { activity, loading, logActivity, deleteActivity };
 }

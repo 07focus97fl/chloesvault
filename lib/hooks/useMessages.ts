@@ -47,11 +47,15 @@ export function useMessages() {
 
     const channel = supabase
       .channel("messages")
+      .on("postgres_changes", { event: "UPDATE", schema: "chloesvault", table: "messages" }, (payload) => {
+        const updated = payload.new as Message;
+        setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, status: updated.status } : m));
+      })
       .on("postgres_changes", { event: "INSERT", schema: "chloesvault", table: "messages" }, (payload) => {
         const newMsg = payload.new as Message;
         setMessages((prev) => {
           // Skip if we already have this message (optimistic insert)
-          const isDuplicate = prev.some((m) => {
+          const isMatch = (m: Message) => {
             if (m.from_user !== newMsg.from_user || m.type !== newMsg.type) return false;
             const timeDiff = Math.abs(new Date(m.created_at).getTime() - new Date(newMsg.created_at).getTime());
             if (timeDiff > 5000) return false;
@@ -59,8 +63,11 @@ export function useMessages() {
             if (newMsg.type === "image" || newMsg.type === "gif") return m.media_url === newMsg.media_url;
             if (newMsg.type === "voice") return m.voice_url === newMsg.voice_url;
             return false;
-          });
-          if (isDuplicate) return prev;
+          };
+          // Replace optimistic message with real DB message (to get real ID)
+          if (prev.some(isMatch)) {
+            return prev.map((m) => isMatch(m) ? newMsg : m);
+          }
           return [...prev, newMsg];
         });
       })
@@ -240,5 +247,24 @@ export function useMessages() {
     }
   }, [supabase]);
 
-  return { messages, setMessages, loading, loadingMore, hasMore, loadMore, sendMessage, sendVoiceNote, sendImage, sendGif };
+  const markAsRead = useCallback(async (currentUser: UserRole) => {
+    // Optimistically update local state
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.from_user !== currentUser && m.status !== "read"
+          ? { ...m, status: "read" as const }
+          : m
+      )
+    );
+
+    if (!USE_MOCK) {
+      await supabase
+        .from("messages")
+        .update({ status: "read" })
+        .neq("from_user", currentUser)
+        .neq("status", "read");
+    }
+  }, [supabase]);
+
+  return { messages, setMessages, loading, loadingMore, hasMore, loadMore, sendMessage, sendVoiceNote, sendImage, sendGif, markAsRead };
 }

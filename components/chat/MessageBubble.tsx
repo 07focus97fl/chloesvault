@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Play, Pause, Pin, Check, CheckCheck, StickyNote, X, MessageSquarePlus } from "lucide-react";
+import { Play, Pause, Pin, Check, CheckCheck, StickyNote, X, MessageSquarePlus, RotateCcw, RotateCw, ChevronDown } from "lucide-react";
 import { useLongPress } from "@/lib/hooks/useLongPress";
 import ImageLightbox from "@/components/chat/ImageLightbox";
 import SearchHighlight from "@/components/chat/SearchHighlight";
@@ -18,6 +18,7 @@ interface MessageBubbleProps {
   onAddNote?: (messageId: string, text: string) => void;
   onDeleteNote?: (noteId: string, messageId: string) => void;
   onPromoteToTopic?: (noteText: string) => void;
+  onFetchNotes?: (messageId: string) => void;
 }
 
 function hashCode(str: string): number {
@@ -45,6 +46,7 @@ export default function MessageBubble({
   onAddNote,
   onDeleteNote,
   onPromoteToTopic,
+  onFetchNotes,
 }: MessageBubbleProps) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -53,7 +55,16 @@ export default function MessageBubble({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationRef = useRef<number | null>(null);
-  const noteInputRef = useRef<HTMLInputElement>(null);
+  const noteInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Eagerly fetch notes for voice messages so badge count is available
+  const fetchedRef = useRef(false);
+  useEffect(() => {
+    if (message.type === "voice" && onFetchNotes && !fetchedRef.current) {
+      fetchedRef.current = true;
+      onFetchNotes(message.id);
+    }
+  }, [message.type, message.id, onFetchNotes]);
 
   const { onTouchStart, onTouchMove, onTouchEnd, firedRef } = useLongPress(
     () => onLongPress?.(),
@@ -100,6 +111,13 @@ export default function MessageBubble({
     setPlaying(!playing);
   }, [playing, message.voice_url, updateProgress]);
 
+  const seek = useCallback((delta: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + delta));
+    if (audio.duration) setProgress(audio.currentTime / audio.duration);
+  }, []);
+
   useEffect(() => {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -145,14 +163,32 @@ export default function MessageBubble({
           {message.is_pinned && (
             <Pin size={10} className="absolute right-2 top-2 text-cv-accent" />
           )}
-          <button
-            onClick={togglePlay}
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-              isMine ? "bg-michael/20 hover:bg-michael/30" : "bg-chloe/20 hover:bg-chloe/30"
-            }`}
-          >
-            {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {playing && (
+              <button
+                onClick={(e) => { e.stopPropagation(); seek(-5); }}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-text-dim hover:text-text transition-colors"
+              >
+                <RotateCcw size={11} />
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                isMine ? "bg-michael/20 hover:bg-michael/30" : "bg-chloe/20 hover:bg-chloe/30"
+              }`}
+            >
+              {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+            </button>
+            {playing && (
+              <button
+                onClick={(e) => { e.stopPropagation(); seek(5); }}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-text-dim hover:text-text transition-colors"
+              >
+                <RotateCw size={11} />
+              </button>
+            )}
+          </div>
           <div className="flex flex-1 flex-col gap-1.5">
             <div className="relative flex items-end gap-[2px]">
               {waveformHeights.map((h, i) => {
@@ -190,7 +226,7 @@ export default function MessageBubble({
                     e.stopPropagation();
                     setNotesOpen((v) => !v);
                   }}
-                  className={`ml-auto rounded-full p-1 transition-colors ${
+                  className={`ml-auto flex items-center gap-1 rounded-full px-1.5 py-0.5 transition-colors ${
                     notesOpen
                       ? "bg-cv-accent/20 text-cv-accent"
                       : "text-text-dim hover:text-text"
@@ -198,6 +234,10 @@ export default function MessageBubble({
                   title="Notes"
                 >
                   <StickyNote size={12} />
+                  {!notesOpen && notes.length > 0 && (
+                    <span className="text-[10px] font-medium">{notes.length}</span>
+                  )}
+                  <ChevronDown size={10} className={`transition-transform ${notesOpen ? "rotate-180" : ""}`} />
                 </button>
               )}
             </div>
@@ -205,59 +245,62 @@ export default function MessageBubble({
         </div>
 
         {/* Notes section */}
-        {(notesOpen || notes.length > 0) && (
-          <div className="mt-1.5 flex flex-col gap-1 px-1" onClick={(e) => e.stopPropagation()}>
+        {notesOpen && (
+          <div className="mt-1.5 flex flex-col gap-1.5 px-1" onClick={(e) => e.stopPropagation()}>
             {notes.map((note) => (
               <div
                 key={note.id}
-                className="group flex items-start gap-1.5 rounded-lg bg-surface/60 px-2.5 py-1.5 text-xs"
+                className="group rounded-lg bg-surface/60 px-2.5 py-2 text-xs"
               >
-                <span className="flex-1 text-text-dim leading-relaxed">{note.text}</span>
-                <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  {onPromoteToTopic && (
-                    <button
-                      onClick={() => onPromoteToTopic(note.text)}
-                      className="rounded p-0.5 text-text-dim hover:text-cv-accent"
-                      title="Add to Topics"
-                    >
-                      <MessageSquarePlus size={12} />
-                    </button>
-                  )}
-                  {onDeleteNote && (
-                    <button
-                      onClick={() => onDeleteNote(note.id, message.id)}
-                      className="rounded p-0.5 text-text-dim hover:text-red-400"
-                      title="Delete note"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
+                <p className="whitespace-pre-wrap text-text-dim leading-relaxed">{note.text}</p>
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-[10px] text-text-dim/50">
+                    {new Date(note.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}
+                  </span>
+                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {onPromoteToTopic && (
+                      <button
+                        onClick={() => onPromoteToTopic(note.text)}
+                        className="rounded p-0.5 text-text-dim hover:text-cv-accent"
+                        title="Add to Topics"
+                      >
+                        <MessageSquarePlus size={12} />
+                      </button>
+                    )}
+                    {onDeleteNote && (
+                      <button
+                        onClick={() => onDeleteNote(note.id, message.id)}
+                        className="rounded p-0.5 text-text-dim hover:text-red-400"
+                        title="Delete note"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
-            {notesOpen && (
-              <div className="flex items-center gap-1.5">
-                <input
-                  ref={noteInputRef}
-                  type="text"
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAddNote();
-                    if (e.key === "Escape") setNotesOpen(false);
-                  }}
-                  placeholder="Jot a note..."
-                  className="flex-1 rounded-lg border border-border bg-surface/40 px-2.5 py-1.5 text-xs text-text placeholder:text-text-dim/50 focus:border-cv-accent/40 focus:outline-none"
-                />
-                <button
-                  onClick={handleAddNote}
-                  disabled={!noteText.trim()}
-                  className="rounded-lg bg-cv-accent/20 px-2 py-1.5 text-[10px] font-medium text-cv-accent transition-colors hover:bg-cv-accent/30 disabled:opacity-40"
-                >
-                  Add
-                </button>
-              </div>
-            )}
+            <div className="flex items-start gap-1.5">
+              <textarea
+                ref={noteInputRef as React.RefObject<HTMLTextAreaElement>}
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAddNote(); }
+                  if (e.key === "Escape") setNotesOpen(false);
+                }}
+                placeholder="Jot a note... (Shift+Enter for new line)"
+                rows={2}
+                className="flex-1 resize-none rounded-lg border border-border bg-surface/40 px-2.5 py-1.5 text-xs text-text placeholder:text-text-dim/50 focus:border-cv-accent/40 focus:outline-none"
+              />
+              <button
+                onClick={handleAddNote}
+                disabled={!noteText.trim()}
+                className="mt-0.5 rounded-lg bg-cv-accent/20 px-2 py-1.5 text-[10px] font-medium text-cv-accent transition-colors hover:bg-cv-accent/30 disabled:opacity-40"
+              >
+                Add
+              </button>
+            </div>
           </div>
         )}
       </div>

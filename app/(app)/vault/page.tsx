@@ -1,38 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { Lock } from "lucide-react";
 import Card from "@/components/ui/Card";
 import { VAULT_SECTIONS } from "@/lib/constants";
 
 export default function VaultPage() {
   return (
-    <div className="px-5 pt-14">
-      <div className="mb-8 text-center animate-fade-in-up">
-        <div className="mb-2 flex items-center justify-center gap-2">
-          <Lock size={16} className="text-accent" />
-          <h1 className="font-heading text-3xl font-bold tracking-tight">
-            The Vault
-          </h1>
-        </div>
-        <p className="text-sm text-text-muted">Our shared collection</p>
+    <div className="flex flex-col px-5 pt-14 pb-24 min-h-screen">
+      <div className="mb-6 animate-fade-in-up">
+        <h1 className="font-heading text-3xl font-bold tracking-tight">
+          Vault
+        </h1>
+        <p className="text-sm text-text-muted mt-1">Your shared treasure chest</p>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 flex-1 auto-rows-fr">
         {VAULT_SECTIONS.map((section, i) => (
-          <Link key={section.href} href={section.href}>
-            <Card
-              className="flex items-center gap-4 animate-fade-in-up mb-3"
-              style={{ animationDelay: `${i * 0.1}s` } as React.CSSProperties}
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface text-2xl">
-                {section.emoji}
-              </span>
-              <div className="flex-1">
-                <h3 className="font-medium">{section.title}</h3>
-                <p className="text-sm text-text-muted">{section.description}</p>
-              </div>
-              <span className="text-text-dim">&rsaquo;</span>
+          <Link
+            key={section.href}
+            href={section.href}
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${i * 0.04}s` } as React.CSSProperties}
+          >
+            <Card className="h-full flex flex-col justify-center items-center gap-2 text-center">
+              <span className="text-3xl">{section.emoji}</span>
+              <span className="font-heading font-semibold text-sm">{section.title}</span>
             </Card>
           </Link>
         ))}

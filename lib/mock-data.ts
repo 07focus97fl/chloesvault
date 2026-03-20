@@ -1,4 +1,4 @@
-import type { Message, Quote, Moment, Recommendation, Topic, Activity, MessageFolder, MessageFolderItem, CollagePhoto, MessageNote, Nightmare } from "@/lib/types/database";
+import type { Message, Quote, Moment, Recommendation, Topic, Activity, MessageFolder, MessageFolderItem, CollagePhoto, MessageNote, Nightmare, Ick, Poem, QuoteCategory } from "@/lib/types/database";
 
 export const MOCK_MESSAGES: Message[] = [
   // March 13
@@ -250,6 +250,12 @@ export const MOCK_FOLDER_ITEMS: MessageFolderItem[] = [
   },
 ];
 
+export const MOCK_QUOTE_CATEGORIES: QuoteCategory[] = [
+  { id: "qc1", value: "racist", label: "Racist Quote of the Month", emoji: "😬", created_at: "2026-01-01T00:00:00Z" },
+  { id: "qc2", value: "out_of_context", label: "Out of Context", emoji: "🤨", created_at: "2026-01-01T00:00:00Z" },
+  { id: "qc3", value: "libtard", label: "Libtard Quote of the Month", emoji: "🗳️", created_at: "2026-01-01T00:00:00Z" },
+];
+
 export const MOCK_QUOTES: Quote[] = [
   {
     id: "1",
@@ -420,6 +426,97 @@ export const MOCK_MESSAGE_NOTES: MessageNote[] = [
   },
 ];
 
+export const MOCK_POEMS: Poem[] = [
+  {
+    id: "poem1",
+    title: "Morning Coffee",
+    text: "There once was a girl who loved lattes,\nWhose mornings were chronically splatty,\nShe'd grumble and groan,\nIn a caffeinated tone,\nTill the oat milk made everything happy.",
+    type: "limerick",
+    from_user: "michael",
+    to_user: "chloe",
+    date: "2026-03-14",
+    created_at: "2026-03-14T00:00:00Z",
+  },
+  {
+    id: "poem2",
+    title: "The Snorer",
+    text: "You say you don't snore\nbut the walls disagree,\na symphony of chaos\nperformed just for me.",
+    type: "free_verse",
+    from_user: "chloe",
+    to_user: "michael",
+    date: "2026-02-28",
+    created_at: "2026-02-28T00:00:00Z",
+  },
+  {
+    id: "poem3",
+    title: "Grocery Run",
+    text: "A couple went shopping one day,\nHe grabbed chips and she said no way,\nThey argued in aisle three,\nOver organic broccoli,\nAnd left with just bread anyway.",
+    type: "limerick",
+    from_user: "chloe",
+    to_user: "michael",
+    date: "2026-02-14",
+    created_at: "2026-02-14T00:00:00Z",
+  },
+  {
+    id: "poem4",
+    title: "Sunday",
+    text: "Tangled sheets and sleepy eyes,\nNowhere to be, no alarms to rise,\nYour laugh beside me,\nSoft and free,\nThis is all I need.",
+    type: "free_verse",
+    from_user: "michael",
+    to_user: "chloe",
+    date: "2026-01-20",
+    created_at: "2026-01-20T00:00:00Z",
+  },
+  {
+    id: "poem5",
+    title: "The Remote",
+    text: "There once was a battle so dire,\nOver who held the remote by the fire,\nShe wanted her shows,\nHe wanted his prose,\nSo they compromised — and watched The Wire.",
+    type: "limerick",
+    from_user: "michael",
+    to_user: "chloe",
+    date: "2025-12-25",
+    created_at: "2025-12-25T00:00:00Z",
+  },
+];
+
+export const MOCK_ICKS: Ick[] = [
+  {
+    id: "ick1",
+    text: "Playing with Legos past the age of 12",
+    about: "michael",
+    added_by: "chloe",
+    created_at: "2026-03-10T00:00:00Z",
+  },
+  {
+    id: "ick2",
+    text: "Wearing those toe shoes to the gym",
+    about: "michael",
+    added_by: "chloe",
+    created_at: "2026-03-08T00:00:00Z",
+  },
+  {
+    id: "ick3",
+    text: "Narrating their own cooking like a YouTube video",
+    about: "michael",
+    added_by: "chloe",
+    created_at: "2026-03-05T00:00:00Z",
+  },
+  {
+    id: "ick4",
+    text: "Using baby talk in public",
+    about: "chloe",
+    added_by: "michael",
+    created_at: "2026-03-09T00:00:00Z",
+  },
+  {
+    id: "ick5",
+    text: "Clapping when the plane lands",
+    about: "chloe",
+    added_by: "michael",
+    created_at: "2026-03-07T00:00:00Z",
+  },
+];
+
 export const MOCK_NIGHTMARES: Nightmare[] = [
   {
     id: "n1",
@@ -482,33 +579,40 @@ export const MOCK_COLLAGE_PHOTOS: CollagePhoto[] = [
   },
 ];
 
-export const MOCK_ACTIVITY: (Activity & { href: string })[] = [
+export const MOCK_ACTIVITY: Activity[] = [
   {
     id: "1",
-    emoji: "💬",
-    text: "Michael sent a voice note",
-    created_at: "2026-03-15T08:07:00Z",
+    emoji: "🎙️",
+    text: "Chloe sent a voice note",
+    created_at: "2026-03-19T23:18:00Z",
     href: "/chat",
   },
   {
     id: "2",
-    emoji: "📝",
-    text: "Chloe added a new topic",
-    created_at: "2026-03-14T22:00:00Z",
-    href: "/vault/topics",
+    emoji: "📌",
+    text: "Michael pinned a message",
+    created_at: "2026-03-19T22:20:00Z",
+    href: "/chat",
   },
   {
     id: "3",
-    emoji: "✅",
-    text: "Michael marked \"Past Lives\" as watched",
-    created_at: "2026-03-14T20:00:00Z",
+    emoji: "🎬",
+    text: "Chloe added \"Challengers\" to Recommendations",
+    created_at: "2026-03-19T20:20:00Z",
     href: "/vault/recommendations",
   },
   {
     id: "4",
-    emoji: "💛",
-    text: "New quote of the month set",
-    created_at: "2026-03-01T00:00:00Z",
-    href: "/vault/quotes",
+    emoji: "💭",
+    text: "Michael added a new Topic",
+    created_at: "2026-03-18T10:00:00Z",
+    href: "/vault/topics",
+  },
+  {
+    id: "5",
+    emoji: "✨",
+    text: "New moment: \"First road trip\"",
+    created_at: "2026-03-17T15:00:00Z",
+    href: "/vault/moments",
   },
 ];

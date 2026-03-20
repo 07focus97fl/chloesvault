@@ -43,5 +43,14 @@ export function useTopics() {
     setTopics((prev) => prev.map((t) => t.id === id ? { ...t, used: !t.used } : t));
   }, [supabase, topics]);
 
-  return { topics, loading, addTopic, toggleUsed };
+  const deleteTopic = useCallback(async (id: string) => {
+    if (USE_MOCK) {
+      setTopics((prev) => prev.filter((t) => t.id !== id));
+      return;
+    }
+    await supabase.from("topics").delete().eq("id", id);
+    setTopics((prev) => prev.filter((t) => t.id !== id));
+  }, [supabase]);
+
+  return { topics, loading, addTopic, toggleUsed, deleteTopic };
 }

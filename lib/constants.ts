@@ -16,18 +16,19 @@ export const REC_CATEGORIES = [
   { value: "other", label: "Other", emoji: "💡" },
 ] as const;
 
-export const QUOTE_CATEGORIES = [
+export const DEFAULT_QUOTE_CATEGORIES = [
   { value: "racist", label: "Racist Quote of the Month", emoji: "😬" },
   { value: "out_of_context", label: "Out of Context", emoji: "🤨" },
   { value: "libtard", label: "Libtard Quote of the Month", emoji: "🗳️" },
-] as const;
+];
 
 export const VAULT_SECTIONS = [
-  { title: "Topics", href: "/vault/topics", emoji: "💭", description: "Things to talk about" },
-  { title: "Recommendations", href: "/vault/recommendations", emoji: "🎬", description: "Things to explore" },
-  { title: "Moments", href: "/vault/moments", emoji: "✨", description: "Favorite memories" },
-  { title: "Quotes", href: "/vault/quotes", emoji: "💬", description: "Words that move us" },
-  { title: "Nightmares", href: "/vault/nightmares", emoji: "😱", description: "The scary ones" },
-  { title: "Icks", href: "/vault/icks", emoji: "🫠", description: "Coming soon" },
-  { title: "Poems", href: "/vault/poems", emoji: "📝", description: "Coming soon" },
+  { title: "Topics", href: "/vault/topics", emoji: "💭", description: "Conversation starters & discussion ideas" },
+  { title: "Notes", href: "/vault/notes", emoji: "🗒️", description: "Voice note annotations" },
+  { title: "Recommendations", href: "/vault/recommendations", emoji: "🎬", description: "Movies, shows, books & more to share" },
+  { title: "Moments", href: "/vault/moments", emoji: "✨", description: "Your relationship timeline & milestones" },
+  { title: "Quotes", href: "/vault/quotes", emoji: "💬", description: "The most unhinged things we've said" },
+  { title: "Nightmares", href: "/vault/nightmares", emoji: "😱", description: "Worst-case scenarios about each other" },
+  { title: "Icks", href: "/vault/icks", emoji: "🫠", description: "Things that make us go absolutely not" },
+  { title: "Poems", href: "/vault/poems", emoji: "📝", description: "Little verses we write for each other" },
 ] as const;

@@ -26,7 +26,7 @@ export default function GifPicker({ open, onOpenChange, onSelect }: GifPickerPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[70vh] rounded-t-2xl bg-bg">
+      <SheetContent side="bottom" className="max-h-[70vh] max-w-[430px] mx-auto rounded-t-2xl bg-bg">
         <SheetHeader>
           <SheetTitle className="text-text">GIFs</SheetTitle>
         </SheetHeader>

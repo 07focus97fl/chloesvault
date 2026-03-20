@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Trash2, ChevronRight, Plus } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Trash2, ChevronRight, Plus, Loader2 } from "lucide-react";
 import BackHeader from "@/components/ui/BackHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMessageFolders } from "@/lib/hooks/useMessageFolders";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { MOCK_MESSAGES } from "@/lib/mock-data";
 import { formatMessageTime } from "@/lib/utils/date";
 import type { Message } from "@/lib/types/database";
 
@@ -16,22 +15,34 @@ export default function FoldersPage() {
   const {
     folders,
     folderCounts,
-    getFolderMessageIds,
+    getFolderMessages,
     createFolder,
     deleteFolder,
   } = useMessageFolders();
 
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [folderMessages, setFolderMessages] = useState<Message[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmoji, setNewEmoji] = useState("📁");
 
   const selectedFolder = folders.find((f) => f.id === selectedFolderId);
-  const folderMessages: Message[] = selectedFolderId
-    ? getFolderMessageIds(selectedFolderId)
-        .map((mid) => MOCK_MESSAGES.find((m) => m.id === mid))
-        .filter(Boolean) as Message[]
-    : [];
+
+  const loadFolderMessages = useCallback(async (folderId: string) => {
+    setLoadingMessages(true);
+    const messages = await getFolderMessages(folderId);
+    setFolderMessages(messages);
+    setLoadingMessages(false);
+  }, [getFolderMessages]);
+
+  useEffect(() => {
+    if (selectedFolderId) {
+      loadFolderMessages(selectedFolderId);
+    } else {
+      setFolderMessages([]);
+    }
+  }, [selectedFolderId, loadFolderMessages]);
 
   const handleCreate = () => {
     if (!newName.trim()) return;
@@ -49,7 +60,11 @@ export default function FoldersPage() {
           onBack={() => setSelectedFolderId(null)}
         />
         <ScrollArea className="flex-1">
-          {folderMessages.length === 0 ? (
+          {loadingMessages ? (
+            <div className="flex justify-center py-20">
+              <Loader2 size={24} className="animate-spin text-text-dim" />
+            </div>
+          ) : folderMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 px-6 py-20">
               <p className="text-sm text-text-muted">No messages in this folder</p>
               <p className="text-xs text-text-dim">

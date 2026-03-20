@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Check, Trash2, ExternalLink } from "lucide-react";
 import { REC_CATEGORIES } from "@/lib/constants";
 import { useRecommendations } from "@/lib/hooks/useRecommendations";
+import { logActivity } from "@/lib/logActivity";
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { RecCategory } from "@/lib/types/database";
 
@@ -14,12 +15,15 @@ export default function RecommendationsPage() {
   const { recommendations, loading, addRec, toggleDone, deleteRec } = useRecommendations();
   const { role } = useAuth();
   const [filter, setFilter] = useState<string>("all");
+  const [personFilter, setPersonFilter] = useState<"all" | "michael" | "chloe">("all");
   const [showForm, setShowForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState<RecCategory>("movie");
   const [newLink, setNewLink] = useState("");
 
-  const filtered = filter === "all" ? recommendations : recommendations.filter((r) => r.category === filter);
+  const filtered = recommendations
+    .filter((r) => filter === "all" || r.category === filter)
+    .filter((r) => personFilter === "all" || r.from_user === personFilter);
   const pending = filtered.filter((r) => !r.done);
   const done = filtered.filter((r) => r.done);
 
@@ -33,6 +37,8 @@ export default function RecommendationsPage() {
       done: false,
       link: newLink.trim() || null,
     });
+    const name = (role || "michael") === "michael" ? "Michael" : "Chloe";
+    logActivity("🎬", `${name} added "${newTitle.trim()}" to Recommendations`, "/vault/recommendations");
     setNewTitle("");
     setNewLink("");
     setShowForm(false);
@@ -63,6 +69,27 @@ export default function RecommendationsPage() {
               }`}
             >
               {cat.emoji} {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Person filter pills */}
+        <div className="mb-4 flex gap-2">
+          {(["all", "michael", "chloe"] as const).map((option) => (
+            <button
+              key={option}
+              onClick={() => setPersonFilter(option)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                personFilter === option
+                  ? option === "michael"
+                    ? "bg-michael/20 text-michael border border-michael/30"
+                    : option === "chloe"
+                      ? "bg-chloe/20 text-chloe border border-chloe/30"
+                      : "bg-accent/20 text-accent border border-accent/30"
+                  : "border border-border text-text-dim hover:border-text-muted"
+              }`}
+            >
+              {option === "all" ? "All" : option === "michael" ? "Michael" : "Chloe"}
             </button>
           ))}
         </div>
@@ -113,7 +140,12 @@ export default function RecommendationsPage() {
                 <span className="text-xl">{rec.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-medium">{rec.title}</h3>
-                  <p className="text-xs text-text-dim capitalize">{rec.category}</p>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <p className="text-xs text-text-dim capitalize">{rec.category}</p>
+                    <span className={`text-xs ${rec.from_user === "michael" ? "text-michael" : "text-chloe"}`}>
+                      {rec.from_user === "michael" ? "Michael" : "Chloe"}
+                    </span>
+                  </div>
                 </div>
                 {rec.link && (
                   <a
@@ -158,7 +190,12 @@ export default function RecommendationsPage() {
                   <span className="text-xl">{rec.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-medium line-through text-text-dim">{rec.title}</h3>
-                    <p className="text-xs text-text-dim capitalize">{rec.category}</p>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <p className="text-xs text-text-dim capitalize">{rec.category}</p>
+                      <span className={`text-xs ${rec.from_user === "michael" ? "text-michael" : "text-chloe"}`}>
+                        {rec.from_user === "michael" ? "Michael" : "Chloe"}
+                      </span>
+                    </div>
                   </div>
                   {rec.link && (
                     <a

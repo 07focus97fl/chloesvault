@@ -17,7 +17,7 @@ export default function ImageLightbox({ src, open, onOpenChange }: ImageLightbox
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[90vw] border-none bg-transparent p-0 shadow-none sm:max-w-[90vw]"
+        className="max-w-[430px] border-none bg-transparent p-0 shadow-none"
         showCloseButton
       >
         <img

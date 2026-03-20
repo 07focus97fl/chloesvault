@@ -32,6 +32,15 @@ export function useNightmares() {
     if (data) setNightmares(data);
   }, [supabase]);
 
+  const updateNightmare = useCallback(async (id: string, text: string) => {
+    if (USE_MOCK) {
+      setNightmares((prev) => prev.map((n) => n.id === id ? { ...n, text } : n));
+      return;
+    }
+    await supabase.from("nightmares").update({ text }).eq("id", id);
+    setNightmares((prev) => prev.map((n) => n.id === id ? { ...n, text } : n));
+  }, [supabase]);
+
   const deleteNightmare = useCallback(async (id: string) => {
     if (USE_MOCK) {
       setNightmares((prev) => prev.filter((n) => n.id !== id));
@@ -41,5 +50,5 @@ export function useNightmares() {
     setNightmares((prev) => prev.filter((n) => n.id !== id));
   }, [supabase]);
 
-  return { nightmares, loading, addNightmare, deleteNightmare };
+  return { nightmares, loading, addNightmare, updateNightmare, deleteNightmare };
 }

@@ -32,5 +32,23 @@ export function useMoments() {
     if (data) setMoments(data);
   }, [supabase]);
 
-  return { moments, loading, addMoment };
+  const deleteMoment = useCallback(async (id: string) => {
+    if (USE_MOCK) {
+      setMoments((prev) => prev.filter((m) => m.id !== id));
+      return;
+    }
+    await supabase.from("moments").delete().eq("id", id);
+    setMoments((prev) => prev.filter((m) => m.id !== id));
+  }, [supabase]);
+
+  const updateMoment = useCallback(async (id: string, updates: Partial<Omit<Moment, "id" | "created_at">>) => {
+    if (USE_MOCK) {
+      setMoments((prev) => prev.map((m) => m.id === id ? { ...m, ...updates } : m));
+      return;
+    }
+    await supabase.from("moments").update(updates).eq("id", id);
+    setMoments((prev) => prev.map((m) => m.id === id ? { ...m, ...updates } : m));
+  }, [supabase]);
+
+  return { moments, loading, addMoment, deleteMoment, updateMoment };
 }

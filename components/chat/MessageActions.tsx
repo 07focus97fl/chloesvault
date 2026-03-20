@@ -59,7 +59,7 @@ export default function MessageActions({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl border-cv-border bg-surface pb-8">
+      <SheetContent side="bottom" className="max-w-[430px] mx-auto rounded-t-2xl border-cv-border bg-surface pb-8">
         <SheetHeader className="pb-2">
           <SheetTitle className="text-sm text-text-muted">Message Actions</SheetTitle>
         </SheetHeader>

@@ -21,6 +21,14 @@ export const metadata: Metadata = {
   title: "ChloeVault",
   description: "Our shared digital vault",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ChloeVault",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

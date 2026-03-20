@@ -6,6 +6,7 @@ import Link from "next/link";
 interface ChatHeaderProps {
   otherName: string;
   currentUserRole: "michael" | "chloe";
+  isOnline: boolean;
   onSearchToggle: () => void;
   onPinnedToggle: () => void;
   pinnedCount: number;
@@ -14,6 +15,7 @@ interface ChatHeaderProps {
 export default function ChatHeader({
   otherName,
   currentUserRole,
+  isOnline,
   onSearchToggle,
   onPinnedToggle,
   pinnedCount,
@@ -32,11 +34,11 @@ export default function ChatHeader({
           >
             {otherName[0]}
           </div>
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-bg bg-emerald-400" />
+          <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-bg ${isOnline ? "bg-emerald-400" : "bg-text-dim/40"}`} />
         </div>
         <div className="flex-1">
           <h1 className="text-sm font-semibold">{otherName}</h1>
-          <p className="text-[11px] text-text-dim">Online</p>
+          <p className="text-[11px] text-text-dim">{isOnline ? "Online" : "Offline"}</p>
         </div>
         <div className="flex items-center gap-1">
           <button

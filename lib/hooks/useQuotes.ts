@@ -49,5 +49,23 @@ export function useQuotes() {
     });
   }, [quotes]);
 
-  return { quotes, loading, addQuote, getQuotesByMonth, getQuotesByCategoryAndMonth, getMonths };
+  const deleteQuote = useCallback(async (id: string) => {
+    if (USE_MOCK) {
+      setQuotes((prev) => prev.filter((q) => q.id !== id));
+      return;
+    }
+    await supabase.from("quotes").delete().eq("id", id);
+    setQuotes((prev) => prev.filter((q) => q.id !== id));
+  }, [supabase]);
+
+  const updateQuote = useCallback(async (id: string, updates: { text: string; author: string }) => {
+    if (USE_MOCK) {
+      setQuotes((prev) => prev.map((q) => q.id === id ? { ...q, ...updates } : q));
+      return;
+    }
+    await supabase.from("quotes").update(updates).eq("id", id);
+    setQuotes((prev) => prev.map((q) => q.id === id ? { ...q, ...updates } : q));
+  }, [supabase]);
+
+  return { quotes, loading, addQuote, deleteQuote, updateQuote, getQuotesByMonth, getQuotesByCategoryAndMonth, getMonths };
 }

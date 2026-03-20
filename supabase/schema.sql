@@ -41,12 +41,32 @@ ALTER TABLE chloesvault.messages ADD COLUMN text_search tsvector
   GENERATED ALWAYS AS (to_tsvector('english', coalesce(text, ''))) STORED;
 CREATE INDEX idx_messages_text_search ON chloesvault.messages USING GIN (text_search);
 
+-- Quote Categories (user-creatable)
+CREATE TABLE chloesvault.quote_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  value TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  emoji TEXT NOT NULL DEFAULT '📝',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.quote_categories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to quote_categories"
+  ON chloesvault.quote_categories FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+-- Seed default categories
+INSERT INTO chloesvault.quote_categories (value, label, emoji) VALUES
+  ('racist', 'Racist Quote of the Month', '😬'),
+  ('out_of_context', 'Out of Context', '🤨'),
+  ('libtard', 'Libtard Quote of the Month', '🗳️');
+
 -- Quotes (monthly quote game with categories)
 CREATE TABLE chloesvault.quotes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   text TEXT NOT NULL,
   author TEXT NOT NULL,
-  category TEXT NOT NULL CHECK (category IN ('racist', 'out_of_context', 'libtard')),
+  category TEXT NOT NULL,
   month TEXT NOT NULL,  -- format: "March 2026"
   added_by TEXT NOT NULL CHECK (added_by IN ('michael', 'chloe')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -113,6 +133,7 @@ CREATE TABLE chloesvault.activity (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   emoji TEXT NOT NULL,
   text TEXT NOT NULL,
+  href TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -222,3 +243,67 @@ CREATE POLICY "Anyone can upload chat images"
   ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'chat-images');
 CREATE POLICY "Anyone can read chat images"
   ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'chat-images');
+
+-- Poems
+CREATE TABLE chloesvault.poems (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  text TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'free_verse',
+  from_user TEXT NOT NULL CHECK (from_user IN ('michael', 'chloe')),
+  to_user TEXT NOT NULL CHECK (to_user IN ('michael', 'chloe')),
+  date DATE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.poems ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to poems"
+  ON chloesvault.poems FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+CREATE INDEX idx_poems_date ON chloesvault.poems(date);
+
+-- Icks
+CREATE TABLE chloesvault.icks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  text TEXT NOT NULL,
+  about TEXT NOT NULL CHECK (about IN ('michael', 'chloe')),
+  added_by TEXT NOT NULL CHECK (added_by IN ('michael', 'chloe')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.icks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to icks"
+  ON chloesvault.icks FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+-- Vault notes (standalone notes, not tied to messages)
+CREATE TABLE chloesvault.vault_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  text TEXT NOT NULL,
+  added_by TEXT NOT NULL CHECK (added_by IN ('michael', 'chloe')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.vault_notes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to vault_notes"
+  ON chloesvault.vault_notes FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+-- Push Subscriptions (for Web Push notifications)
+CREATE TABLE chloesvault.push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_role TEXT NOT NULL CHECK (user_role IN ('michael', 'chloe')),
+  endpoint TEXT NOT NULL UNIQUE,
+  keys_p256dh TEXT NOT NULL,
+  keys_auth TEXT NOT NULL,
+  device_label TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to push_subscriptions"
+  ON chloesvault.push_subscriptions FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+CREATE INDEX idx_push_subscriptions_user ON chloesvault.push_subscriptions(user_role);

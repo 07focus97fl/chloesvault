@@ -18,6 +18,7 @@ import { groupMessagesByDate } from "@/lib/utils/date";
 import { useMessageSearch } from "@/lib/hooks/useMessageSearch";
 import { usePinnedMessages } from "@/lib/hooks/usePinnedMessages";
 import { useMessageFolders } from "@/lib/hooks/useMessageFolders";
+import { usePresence } from "@/lib/hooks/usePresence";
 import { Loader2 } from "lucide-react";
 import type { Message } from "@/lib/types/database";
 
@@ -36,12 +37,16 @@ export default function ChatPage() {
     sendVoiceNote,
     sendImage,
     sendGif,
+    markAsRead,
   } = useMessages();
+
+  const { isOtherOnline } = usePresence(currentUserRole);
 
   const {
     addNote,
     deleteNote,
     getNotesForMessage,
+    fetchNotes,
     promoteToTopic,
   } = useMessageNotes(currentUserRole);
 
@@ -83,6 +88,15 @@ export default function ChatPage() {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, loading]);
+
+  // Mark messages from the other user as read
+  useEffect(() => {
+    if (loading || messages.length === 0) return;
+    const hasUnread = messages.some(
+      (m) => m.from_user !== currentUserRole && m.status !== "read"
+    );
+    if (hasUnread) markAsRead(currentUserRole);
+  }, [messages, loading, currentUserRole, markAsRead]);
 
   // Scroll to search result
   useEffect(() => {
@@ -177,6 +191,7 @@ export default function ChatPage() {
       <ChatHeader
         otherName={otherName}
         currentUserRole={currentUserRole}
+        isOnline={isOtherOnline}
         onSearchToggle={() => setSearchOpen((v) => !v)}
         onPinnedToggle={() => setPinnedPanelOpen(true)}
         pinnedCount={pinnedMessages.length}
@@ -235,6 +250,7 @@ export default function ChatPage() {
                         onAddNote={msg.type === "voice" ? addNote : undefined}
                         onDeleteNote={msg.type === "voice" ? deleteNote : undefined}
                         onPromoteToTopic={msg.type === "voice" ? handlePromoteToTopic : undefined}
+                        onFetchNotes={msg.type === "voice" ? fetchNotes : undefined}
                       />
                     </div>
                   ))}
