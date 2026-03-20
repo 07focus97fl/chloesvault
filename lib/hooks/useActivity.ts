@@ -39,7 +39,7 @@ export function useActivity() {
 
   const logActivity = useCallback(async (emoji: string, text: string) => {
     if (USE_MOCK) {
-      setActivity((prev) => [{ id: crypto.randomUUID(), emoji, text, created_at: new Date().toISOString() }, ...prev]);
+      setActivity((prev) => [{ id: crypto.randomUUID(), emoji, text, href: null, created_at: new Date().toISOString() }, ...prev]);
       return;
     }
     await supabase.from("activity").insert({ emoji, text });
