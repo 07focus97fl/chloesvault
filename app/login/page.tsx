@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const VAULT_PASSWORD = "jpdisciples";
+const VAULT_PASSWORD = "chloe";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
