@@ -247,7 +247,7 @@ export default function MessageBubble({
                   : "0:12"}
               </span>
               <span className="text-[10px] text-text-dim">{timeStr}</span>
-              <StatusIcon status={message.status} isMine={isMine} />
+              <StatusIcon />
               {onAddNote && (
                 <button
                   onClick={(e) => {
@@ -373,7 +373,7 @@ export default function MessageBubble({
             )}
             <div className={`flex items-center gap-1.5 px-3 py-1.5 ${isMine ? "justify-end" : ""}`}>
               <span className="text-[10px] text-text-dim">{timeStr}</span>
-              <StatusIcon status={message.status} isMine={isMine} />
+              <StatusIcon />
             </div>
           </div>
           <ReactionBadges reactions={reactions} isMine={isMine} />
@@ -414,7 +414,7 @@ export default function MessageBubble({
         </p>
         <div className={`mt-1 flex items-center gap-1.5 ${isMine ? "justify-end" : ""}`}>
           <span className={`text-[10px] ${freakTimeActive ? "text-pink-400" : "text-text-dim"}`}>{timeStr}</span>
-          <StatusIcon status={message.status} isMine={isMine} />
+          <StatusIcon />
         </div>
       </div>
       <ReactionBadges reactions={reactions} isMine={isMine} />
