@@ -453,6 +453,24 @@ export interface Database {
         };
         Relationships: [];
       };
+      app_state: {
+        Row: {
+          id: string;
+          freak_time: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          freak_time?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          freak_time?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       message_folder_items: {
         Row: {
           id: string;

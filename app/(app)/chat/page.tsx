@@ -11,6 +11,7 @@ import MessageActions from "@/components/chat/MessageActions";
 import PinnedMessagesPanel from "@/components/chat/PinnedMessagesPanel";
 import FolderPicker from "@/components/chat/FolderPicker";
 import GifPicker from "@/components/chat/GifPicker";
+import FreakTimeOverlay from "@/components/chat/FreakTimeOverlay";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useMessages } from "@/lib/hooks/useMessages";
 import { useMessageNotes } from "@/lib/hooks/useMessageNotes";
@@ -20,6 +21,7 @@ import { usePinnedMessages } from "@/lib/hooks/usePinnedMessages";
 import { useMessageFolders } from "@/lib/hooks/useMessageFolders";
 import { useMessageReactions } from "@/lib/hooks/useMessageReactions";
 import { usePresence } from "@/lib/hooks/usePresence";
+import { useFreakTime } from "@/lib/hooks/useFreakTime";
 import { Loader2 } from "lucide-react";
 import type { Message } from "@/lib/types/database";
 
@@ -42,6 +44,7 @@ export default function ChatPage() {
   } = useMessages();
 
   const { isOtherOnline } = usePresence(currentUserRole);
+  const { freakTimeActive, toggleFreakTime } = useFreakTime();
 
   const {
     addNote,
@@ -190,7 +193,8 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="fixed inset-x-0 top-0 bottom-[68px] z-30 mx-auto flex max-w-[430px] flex-col bg-bg">
+    <div className={`fixed inset-x-0 top-0 bottom-[68px] z-30 mx-auto flex max-w-[430px] flex-col transition-colors duration-500 ${freakTimeActive ? "bg-pink-100" : "bg-bg"}`}>
+      {freakTimeActive && <FreakTimeOverlay />}
       <ChatHeader
         otherName={otherName}
         currentUserRole={currentUserRole}
@@ -198,6 +202,8 @@ export default function ChatPage() {
         onSearchToggle={() => setSearchOpen((v) => !v)}
         onPinnedToggle={() => setPinnedPanelOpen(true)}
         pinnedCount={pinnedMessages.length}
+        freakTimeActive={freakTimeActive}
+        onFreakTimeToggle={toggleFreakTime}
       />
 
       {searchOpen && (
@@ -215,7 +221,7 @@ export default function ChatPage() {
         />
       )}
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="relative flex-1 overflow-y-auto">
         <div className="flex flex-col gap-2 px-4 py-4">
           {/* Sentinel for loading more */}
           <div ref={sentinelRef} className="h-1" />
@@ -249,6 +255,7 @@ export default function ChatPage() {
                         highlightQuery={searchOpen ? search.query : undefined}
                         isSearchTarget={search.currentMessageId === msg.id}
                         onLongPress={() => setActionMessage(msg)}
+                        freakTimeActive={freakTimeActive}
                         reactions={getReactions(msg.id)}
                         notes={msg.type === "voice" ? getNotesForMessage(msg.id) : undefined}
                         onAddNote={msg.type === "voice" ? addNote : undefined}
@@ -277,6 +284,7 @@ export default function ChatPage() {
           onVoiceStart={() => setShowVoiceRecorder(true)}
           onImageSelect={handleImageSend}
           onGifOpen={() => setGifPickerOpen(true)}
+          freakTimeActive={freakTimeActive}
         />
       )}
 

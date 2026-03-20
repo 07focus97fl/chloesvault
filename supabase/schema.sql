@@ -326,3 +326,19 @@ CREATE POLICY "Allow all access to message_reactions"
 CREATE INDEX idx_message_reactions_message ON chloesvault.message_reactions(message_id);
 
 ALTER PUBLICATION supabase_realtime ADD TABLE chloesvault.message_reactions;
+
+-- App State (singleton row for shared app toggles like Freak Time)
+CREATE TABLE chloesvault.app_state (
+  id TEXT PRIMARY KEY DEFAULT 'singleton',
+  freak_time BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE chloesvault.app_state ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to app_state"
+  ON chloesvault.app_state FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+INSERT INTO chloesvault.app_state (id, freak_time) VALUES ('singleton', false);
+
+ALTER PUBLICATION supabase_realtime ADD TABLE chloesvault.app_state;

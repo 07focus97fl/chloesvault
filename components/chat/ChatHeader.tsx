@@ -10,6 +10,8 @@ interface ChatHeaderProps {
   onSearchToggle: () => void;
   onPinnedToggle: () => void;
   pinnedCount: number;
+  freakTimeActive?: boolean;
+  onFreakTimeToggle?: () => void;
 }
 
 export default function ChatHeader({
@@ -19,6 +21,8 @@ export default function ChatHeader({
   onSearchToggle,
   onPinnedToggle,
   pinnedCount,
+  freakTimeActive,
+  onFreakTimeToggle,
 }: ChatHeaderProps) {
   const avatarColor =
     currentUserRole === "michael"
@@ -26,7 +30,7 @@ export default function ChatHeader({
       : "bg-michael/20 text-michael";
 
   return (
-    <header className="shrink-0 border-b border-cv-border bg-bg/80 px-4 py-3 backdrop-blur-xl">
+    <header className={`shrink-0 border-b px-4 py-3 backdrop-blur-xl transition-colors duration-500 ${freakTimeActive ? "border-pink-200 bg-pink-50/90" : "border-cv-border bg-bg/80"}`}>
       <div className="flex items-center gap-3">
         <div className="relative">
           <div
@@ -34,22 +38,23 @@ export default function ChatHeader({
           >
             {otherName[0]}
           </div>
-          <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-bg ${isOnline ? "bg-emerald-400" : "bg-text-dim/40"}`} />
         </div>
         <div className="flex-1">
-          <h1 className="text-sm font-semibold">{otherName}</h1>
-          <p className="text-[11px] text-text-dim">{isOnline ? "Online" : "Offline"}</p>
+          <h1 className={`text-sm font-semibold ${freakTimeActive ? "text-pink-900" : ""}`}>{otherName}</h1>
+          {freakTimeActive && (
+            <p className="text-[11px] text-pink-600">feeling flirty...</p>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={onSearchToggle}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-text-dim transition-colors hover:bg-surface hover:text-text"
+            className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${freakTimeActive ? "text-pink-400 hover:bg-pink-200" : "text-text-dim hover:bg-surface hover:text-text"}`}
           >
             <Search size={16} />
           </button>
           <button
             onClick={onPinnedToggle}
-            className="relative flex h-8 w-8 items-center justify-center rounded-full text-text-dim transition-colors hover:bg-surface hover:text-text"
+            className={`relative flex h-8 w-8 items-center justify-center rounded-full transition-colors ${freakTimeActive ? "text-pink-400 hover:bg-pink-200" : "text-text-dim hover:bg-surface hover:text-text"}`}
           >
             <Pin size={16} />
             {pinnedCount > 0 && (
@@ -60,10 +65,22 @@ export default function ChatHeader({
           </button>
           <Link
             href="/chat/folders"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-text-dim transition-colors hover:bg-surface hover:text-text"
+            className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${freakTimeActive ? "text-pink-400 hover:bg-pink-200" : "text-text-dim hover:bg-surface hover:text-text"}`}
           >
             <FolderOpen size={16} />
           </Link>
+          {onFreakTimeToggle && (
+            <button
+              onClick={onFreakTimeToggle}
+              className={`flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-bold transition-all ${
+                freakTimeActive
+                  ? "bg-pink-500/20 text-pink-600 ring-1 ring-pink-400/50"
+                  : "text-text-dim hover:bg-surface hover:text-text"
+              }`}
+            >
+              FT
+            </button>
+          )}
         </div>
       </div>
     </header>

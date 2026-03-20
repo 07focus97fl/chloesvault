@@ -8,9 +8,10 @@ interface ChatInputProps {
   onVoiceStart?: () => void;
   onImageSelect?: (file: File) => void;
   onGifOpen?: () => void;
+  freakTimeActive?: boolean;
 }
 
-export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOpen }: ChatInputProps) {
+export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOpen, freakTimeActive }: ChatInputProps) {
   const [text, setText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -44,17 +45,25 @@ export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOp
   };
 
   return (
-    <div className="shrink-0 border-t border-border bg-surface/80 px-4 py-3 backdrop-blur-xl">
+    <div className={`shrink-0 border-t px-4 py-3 backdrop-blur-xl transition-colors duration-500 ${freakTimeActive ? "border-pink-200 bg-pink-50/90" : "border-border bg-surface/80"}`}>
       <div className="flex items-end gap-2">
         <button
           onClick={onVoiceStart}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-text-muted transition-colors hover:text-accent"
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
+            freakTimeActive
+              ? "bg-pink-200/60 text-pink-500 hover:text-pink-600"
+              : "bg-card text-text-muted hover:text-accent"
+          }`}
         >
           <Mic size={18} />
         </button>
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-text-muted transition-colors hover:text-accent"
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
+            freakTimeActive
+              ? "bg-pink-200/60 text-pink-500 hover:text-pink-600"
+              : "bg-card text-text-muted hover:text-accent"
+          }`}
         >
           <ImageIcon size={18} />
         </button>
@@ -67,7 +76,11 @@ export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOp
         />
         <button
           onClick={onGifOpen}
-          className="flex h-10 shrink-0 items-center justify-center rounded-full bg-card px-3 text-[11px] font-bold text-text-muted transition-colors hover:text-accent"
+          className={`flex h-10 shrink-0 items-center justify-center rounded-full px-3 text-[11px] font-bold transition-colors ${
+            freakTimeActive
+              ? "bg-pink-200/60 text-pink-500 hover:text-pink-600"
+              : "bg-card text-text-muted hover:text-accent"
+          }`}
         >
           GIF
         </button>
@@ -85,13 +98,21 @@ export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOp
             }
           }}
           rows={1}
-          placeholder="Type a message..."
-          className="flex-1 max-h-32 resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-text placeholder:text-text-dim focus:border-accent/50 focus:outline-none"
+          placeholder={freakTimeActive ? "Say something spicy..." : "Type a message..."}
+          className={`flex-1 max-h-32 resize-none rounded-xl border px-4 py-2.5 text-sm focus:outline-none ${
+            freakTimeActive
+              ? "border-pink-300 bg-white/70 text-pink-950 placeholder:text-pink-400 focus:border-pink-400"
+              : "border-border bg-card text-text placeholder:text-text-dim focus:border-accent/50"
+          }`}
         />
         <button
           onClick={handleSend}
           disabled={!text.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-bg transition-all hover:bg-accent/90 disabled:opacity-30"
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all disabled:opacity-30 ${
+            freakTimeActive
+              ? "bg-pink-500 text-white hover:bg-pink-600"
+              : "bg-accent text-bg hover:bg-accent/90"
+          }`}
         >
           <Send size={16} />
         </button>

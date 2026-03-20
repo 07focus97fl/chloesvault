@@ -16,6 +16,7 @@ interface MessageBubbleProps {
   onLongPress?: () => void;
   notes?: MessageNote[];
   reactions?: MessageReaction[];
+  freakTimeActive?: boolean;
   onAddNote?: (messageId: string, text: string) => void;
   onDeleteNote?: (noteId: string, messageId: string) => void;
   onPromoteToTopic?: (noteText: string) => void;
@@ -53,11 +54,8 @@ function ReactionBadges({ reactions, isMine }: { reactions: MessageReaction[]; i
   );
 }
 
-function StatusIcon({ status, isMine }: { status: string; isMine: boolean }) {
-  if (!isMine) return null;
-  if (status === "sent") return <Check size={12} className="text-text-dim" />;
-  if (status === "delivered") return <CheckCheck size={12} className="text-text-dim" />;
-  return <CheckCheck size={12} className="text-michael" />;
+function StatusIcon() {
+  return null;
 }
 
 export default function MessageBubble({
@@ -67,6 +65,7 @@ export default function MessageBubble({
   isSearchTarget,
   onLongPress,
   notes = [],
+  freakTimeActive,
   reactions = [],
   onAddNote,
   onDeleteNote,
@@ -101,9 +100,13 @@ export default function MessageBubble({
     onLongPress?.();
   };
 
-  const bubbleColor = isMine
-    ? "bg-michael/10 border-michael/20"
-    : "bg-chloe/10 border-chloe/20";
+  const bubbleColor = freakTimeActive
+    ? isMine
+      ? "bg-pink-400/20 border-pink-300/40"
+      : "bg-white/70 border-pink-200/50"
+    : isMine
+      ? "bg-michael/10 border-michael/20"
+      : "bg-chloe/10 border-chloe/20";
   const align = isMine ? "self-end" : "self-start";
 
   const updateProgress = useCallback(() => {
@@ -402,7 +405,7 @@ export default function MessageBubble({
         {message.is_pinned && (
           <Pin size={10} className="absolute right-2 top-2 text-cv-accent" />
         )}
-        <p className="text-sm leading-relaxed">
+        <p className={`text-sm leading-relaxed ${freakTimeActive ? "text-pink-950" : ""}`}>
           {highlightQuery && message.text ? (
             <SearchHighlight text={message.text} query={highlightQuery} />
           ) : (
@@ -410,7 +413,7 @@ export default function MessageBubble({
           )}
         </p>
         <div className={`mt-1 flex items-center gap-1.5 ${isMine ? "justify-end" : ""}`}>
-          <span className="text-[10px] text-text-dim">{timeStr}</span>
+          <span className={`text-[10px] ${freakTimeActive ? "text-pink-400" : "text-text-dim"}`}>{timeStr}</span>
           <StatusIcon status={message.status} isMine={isMine} />
         </div>
       </div>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1025"/>
+      <stop offset="100%" style="stop-color:#0d0d12"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5d693"/>
+      <stop offset="100%" style="stop-color:#c9952e"/>
+    </linearGradient>
+    <linearGradient id="rose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f0b8c0"/>
+      <stop offset="100%" style="stop-color:#d4808a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="240" r="140" fill="rgba(240,194,127,0.04)"/>
+
+  <g filter="url(#glow)">
+    <!-- KEY 1 (gold) - rotated left, behind -->
+    <g transform="translate(256,256) rotate(-35)">
+      <!-- Bow: traditional round key head with inner circle -->
+      <circle cx="0" cy="-100" r="56" fill="none" stroke="url(#gold)" stroke-width="18"/>
+      <circle cx="0" cy="-100" r="24" fill="url(#bg)" stroke="url(#gold)" stroke-width="6"/>
+      <!-- Shaft -->
+      <rect x="-8" y="-46" width="16" height="170" rx="4" fill="url(#gold)"/>
+      <!-- Teeth (ward cuts) - blocky notches on one side -->
+      <rect x="8" y="84" width="28" height="14" rx="3" fill="url(#gold)"/>
+      <rect x="8" y="104" width="20" height="14" rx="3" fill="url(#gold)"/>
+      <rect x="8" y="124" width="28" height="14" rx="3" fill="url(#gold)"/>
+      <!-- Tip -->
+      <rect x="-8" y="124" width="16" height="10" rx="3" fill="url(#gold)"/>
+    </g>
+
+    <!-- KEY 2 (rose) - rotated right, in front -->
+    <g transform="translate(256,256) rotate(35)">
+      <!-- Bow: traditional round key head with inner circle -->
+      <circle cx="0" cy="-100" r="56" fill="none" stroke="url(#rose)" stroke-width="18"/>
+      <circle cx="0" cy="-100" r="24" fill="url(#bg)" stroke="url(#rose)" stroke-width="6"/>
+      <!-- Shaft -->
+      <rect x="-8" y="-46" width="16" height="170" rx="4" fill="url(#rose)"/>
+      <!-- Teeth (ward cuts) - blocky notches on opposite side -->
+      <rect x="-36" y="84" width="28" height="14" rx="3" fill="url(#rose)"/>
+      <rect x="-28" y="104" width="20" height="14" rx="3" fill="url(#rose)"/>
+      <rect x="-36" y="124" width="28" height="14" rx="3" fill="url(#rose)"/>
+      <!-- Tip -->
+      <rect x="-8" y="124" width="16" height="10" rx="3" fill="url(#rose)"/>
+    </g>
+  </g>
+
+  <!-- Small heart where the keys cross -->
+  <g transform="translate(256,222)">
+    <path d="M0,8 C-3,-2 -14,-6 -14,2 C-14,10 0,20 0,20 C0,20 14,10 14,2 C14,-6 3,-2 0,8Z" fill="#e8a0a8" opacity="0.7"/>
+  </g>
+</svg>
