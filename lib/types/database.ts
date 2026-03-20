@@ -1,7 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type UserRole = "michael" | "chloe";
-export type MessageType = "text" | "voice";
+export type MessageType = "text" | "voice" | "image" | "gif";
 export type MessageStatus = "sent" | "delivered" | "read";
 export type RecCategory = "movie" | "book" | "song" | "show" | "podcast" | "other";
 export type QuoteCategory = "racist" | "out_of_context" | "libtard";
@@ -16,6 +16,7 @@ export interface Database {
           type: MessageType;
           text: string | null;
           voice_url: string | null;
+          media_url: string | null;
           duration: number | null;
           status: MessageStatus;
           is_pinned: boolean;
@@ -29,6 +30,7 @@ export interface Database {
           type: MessageType;
           text?: string | null;
           voice_url?: string | null;
+          media_url?: string | null;
           duration?: number | null;
           status?: MessageStatus;
           is_pinned?: boolean;
@@ -42,6 +44,7 @@ export interface Database {
           type?: MessageType;
           text?: string | null;
           voice_url?: string | null;
+          media_url?: string | null;
           duration?: number | null;
           status?: MessageStatus;
           is_pinned?: boolean;

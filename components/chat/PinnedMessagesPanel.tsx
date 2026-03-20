@@ -72,6 +72,10 @@ export default function PinnedMessagesPanel({
                     <p className="line-clamp-2 text-sm leading-relaxed text-text">
                       {msg.text}
                     </p>
+                  ) : msg.type === "image" ? (
+                    <p className="text-sm text-text-muted">📷 Photo</p>
+                  ) : msg.type === "gif" ? (
+                    <p className="text-sm text-text-muted">GIF</p>
                   ) : (
                     <p className="text-sm text-text-muted">
                       🎙️ Voice note ({msg.duration}s)

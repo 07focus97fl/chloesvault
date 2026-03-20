@@ -13,8 +13,8 @@ const ROTATE_INTERVAL = 30000;
 const ROTATIONS = [-7, 4, -3, 6, -5, 8, -2, 5];
 const PHOTO_W = 120;
 const PHOTO_H = 100;
-const SPEED_MIN = 0.3;
-const SPEED_MAX = 0.7;
+const SPEED_MIN = 0.15;
+const SPEED_MAX = 0.35;
 const BOUNCE_DAMPING = 0.8;
 
 interface PhysicsBody {

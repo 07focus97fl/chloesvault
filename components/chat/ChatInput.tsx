@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { Send, Mic } from "lucide-react";
+import { useState, useRef } from "react";
+import { Send, Mic, ImageIcon } from "lucide-react";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
   onVoiceStart?: () => void;
+  onImageSelect?: (file: File) => void;
+  onGifOpen?: () => void;
 }
 
-export default function ChatInput({ onSend, onVoiceStart }: ChatInputProps) {
+export default function ChatInput({ onSend, onVoiceStart, onImageSelect, onGifOpen }: ChatInputProps) {
   const [text, setText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
     if (!text.trim()) return;
     onSend(text.trim());
     setText("");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onImageSelect) {
+      onImageSelect(file);
+    }
+    // Reset so the same file can be selected again
+    e.target.value = "";
   };
 
   return (
@@ -25,6 +37,25 @@ export default function ChatInput({ onSend, onVoiceStart }: ChatInputProps) {
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-text-muted transition-colors hover:text-accent"
         >
           <Mic size={18} />
+        </button>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-text-muted transition-colors hover:text-accent"
+        >
+          <ImageIcon size={18} />
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <button
+          onClick={onGifOpen}
+          className="flex h-10 shrink-0 items-center justify-center rounded-full bg-card px-3 text-[11px] font-bold text-text-muted transition-colors hover:text-accent"
+        >
+          GIF
         </button>
         <input
           type="text"

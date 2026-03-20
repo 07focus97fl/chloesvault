@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Pause, Pin, Check, CheckCheck, StickyNote, X, MessageSquarePlus } from "lucide-react";
 import { useLongPress } from "@/lib/hooks/useLongPress";
+import ImageLightbox from "@/components/chat/ImageLightbox";
 import SearchHighlight from "@/components/chat/SearchHighlight";
 import { formatMessageTime } from "@/lib/utils/date";
 import type { Message, MessageNote } from "@/lib/types/database";
@@ -49,6 +50,7 @@ export default function MessageBubble({
   const [progress, setProgress] = useState(0);
   const [notesOpen, setNotesOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const noteInputRef = useRef<HTMLInputElement>(null);
@@ -259,6 +261,55 @@ export default function MessageBubble({
           </div>
         )}
       </div>
+    );
+  }
+
+  if (message.type === "image" || message.type === "gif") {
+    return (
+      <>
+        <div
+          className={`flex max-w-[80%] flex-col ${align}`}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onClick={handleClick}
+        >
+          <div
+            className={`relative overflow-hidden rounded-2xl border transition-colors ${bubbleColor} ${
+              isSearchTarget ? "ring-2 ring-cv-accent/50" : ""
+            }`}
+          >
+            {message.is_pinned && (
+              <Pin size={10} className="absolute right-2 top-2 z-10 text-cv-accent drop-shadow" />
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (message.type === "image") setLightboxOpen(true);
+              }}
+              className="block w-full"
+            >
+              <img
+                src={message.media_url ?? ""}
+                alt={message.type === "gif" ? "GIF" : "Photo"}
+                className="max-w-[240px] w-full rounded-t-xl object-cover"
+                loading="lazy"
+              />
+            </button>
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 ${isMine ? "justify-end" : ""}`}>
+              <span className="text-[10px] text-text-dim">{timeStr}</span>
+              <StatusIcon status={message.status} isMine={isMine} />
+            </div>
+          </div>
+        </div>
+        {message.type === "image" && (
+          <ImageLightbox
+            src={message.media_url}
+            open={lightboxOpen}
+            onOpenChange={setLightboxOpen}
+          />
+        )}
+      </>
     );
   }
 

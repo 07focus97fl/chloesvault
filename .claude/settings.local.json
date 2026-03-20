@@ -4,7 +4,10 @@
       "Bash(cd C:/dev/chloesvault && npm install @supabase/supabase-js @supabase/ssr lucide-react)",
       "Bash(cd C:/dev/chloesvault && npm run build 2>&1 | tail -25)",
       "WebSearch",
-      "WebFetch(domain:ui.shadcn.com)"
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(xargs grep:*)",
+      "Bash(find /c/dev/chloesvault -type f -name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx -o -name *.json)",
+      "Bash(ls:*)"
     ]
   }
 }

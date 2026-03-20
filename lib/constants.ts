@@ -23,9 +23,11 @@ export const QUOTE_CATEGORIES = [
 ] as const;
 
 export const VAULT_SECTIONS = [
-  { title: "Quotes", href: "/vault/quotes", emoji: "💬", description: "Words that move us" },
-  { title: "Moments", href: "/vault/moments", emoji: "✨", description: "Favorite memories" },
-  { title: "Recommendations", href: "/vault/recommendations", emoji: "🎬", description: "Things to explore" },
   { title: "Topics", href: "/vault/topics", emoji: "💭", description: "Things to talk about" },
+  { title: "Recommendations", href: "/vault/recommendations", emoji: "🎬", description: "Things to explore" },
+  { title: "Moments", href: "/vault/moments", emoji: "✨", description: "Favorite memories" },
+  { title: "Quotes", href: "/vault/quotes", emoji: "💬", description: "Words that move us" },
   { title: "Nightmares", href: "/vault/nightmares", emoji: "😱", description: "The scary ones" },
+  { title: "Icks", href: "/vault/icks", emoji: "🫠", description: "Coming soon" },
+  { title: "Poems", href: "/vault/poems", emoji: "📝", description: "Coming soon" },
 ] as const;

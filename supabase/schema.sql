@@ -16,9 +16,10 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA chloesvault
 CREATE TABLE chloesvault.messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   from_user TEXT NOT NULL CHECK (from_user IN ('michael', 'chloe')),
-  type TEXT NOT NULL CHECK (type IN ('text', 'voice')),
+  type TEXT NOT NULL CHECK (type IN ('text', 'voice', 'image', 'gif')),
   text TEXT,
   voice_url TEXT,
+  media_url TEXT,
   duration INTEGER,
   status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
   is_pinned BOOLEAN NOT NULL DEFAULT false,
@@ -213,3 +214,11 @@ CREATE POLICY "Anyone can read collage photos"
   ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'collage-photos');
 CREATE POLICY "Anyone can delete collage photos"
   ON storage.objects FOR DELETE TO anon, authenticated USING (bucket_id = 'collage-photos');
+
+-- Storage bucket for chat images
+INSERT INTO storage.buckets (id, name, public) VALUES ('chat-images', 'chat-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+CREATE POLICY "Anyone can upload chat images"
+  ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'chat-images');
+CREATE POLICY "Anyone can read chat images"
+  ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'chat-images');

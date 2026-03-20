@@ -10,6 +10,7 @@ import SearchBar from "@/components/chat/SearchBar";
 import MessageActions from "@/components/chat/MessageActions";
 import PinnedMessagesPanel from "@/components/chat/PinnedMessagesPanel";
 import FolderPicker from "@/components/chat/FolderPicker";
+import GifPicker from "@/components/chat/GifPicker";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useMessages } from "@/lib/hooks/useMessages";
 import { useMessageNotes } from "@/lib/hooks/useMessageNotes";
@@ -33,6 +34,8 @@ export default function ChatPage() {
     loadMore,
     sendMessage,
     sendVoiceNote,
+    sendImage,
+    sendGif,
   } = useMessages();
 
   const {
@@ -47,6 +50,7 @@ export default function ChatPage() {
   const [pinnedPanelOpen, setPinnedPanelOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState<Message | null>(null);
   const [folderPickerMessage, setFolderPickerMessage] = useState<Message | null>(null);
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -131,6 +135,15 @@ export default function ChatPage() {
   const handleVoiceSend = (blob: Blob, duration: number) => {
     sendVoiceNote(currentUserRole, blob, duration);
     setShowVoiceRecorder(false);
+  };
+
+  const handleImageSend = (file: File) => {
+    sendImage(currentUserRole, file);
+  };
+
+  const handleGifSend = (url: string) => {
+    sendGif(currentUserRole, url);
+    setGifPickerOpen(false);
   };
 
   const handlePinFromAction = (msg: Message) => {
@@ -238,6 +251,8 @@ export default function ChatPage() {
         <ChatInput
           onSend={handleSend}
           onVoiceStart={() => setShowVoiceRecorder(true)}
+          onImageSelect={handleImageSend}
+          onGifOpen={() => setGifPickerOpen(true)}
         />
       )}
 
@@ -269,6 +284,12 @@ export default function ChatPage() {
         onToggleFolder={handleToggleFolderItem}
         onCreateFolder={(name, emoji) => createFolder(name, emoji, currentUserRole)}
         userRole={currentUserRole}
+      />
+
+      <GifPicker
+        open={gifPickerOpen}
+        onOpenChange={setGifPickerOpen}
+        onSelect={handleGifSend}
       />
 
       {/* Toast */}
